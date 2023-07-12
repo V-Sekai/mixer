@@ -67,8 +67,6 @@ def build_data_media(buffer: bytes):
 
 
 def send_data_creations(proxies: CreationChangeset):
-    if share_data.use_vrtist_protocol():
-        return
 
     codec = Codec()
 
@@ -93,8 +91,6 @@ def send_data_creations(proxies: CreationChangeset):
 
 
 def send_data_updates(updates: UpdateChangeset):
-    if share_data.use_vrtist_protocol():
-        return
 
     codec = Codec()
     for update in updates:
@@ -114,8 +110,6 @@ def send_data_updates(updates: UpdateChangeset):
 
 
 def build_data_create(buffer):
-    if share_data.use_vrtist_protocol():
-        return
 
     share_data.set_dirty()
     rename_changeset = None
@@ -168,8 +162,6 @@ def _build_soas(uuid: Uuid, soas: List[Soa]):
 
 
 def build_data_update(buffer: bytes):
-    if share_data.use_vrtist_protocol():
-        return
 
     share_data.set_dirty()
     codec = Codec()
@@ -201,8 +193,6 @@ def build_data_update(buffer: bytes):
 
 
 def send_data_removals(removals: RemovalChangeset):
-    if share_data.use_vrtist_protocol():
-        return
 
     for uuid, _, debug_info in removals:
         logger.info("send_removal: %s (%s)", uuid, debug_info)
@@ -212,8 +202,6 @@ def send_data_removals(removals: RemovalChangeset):
 
 
 def build_data_remove(buffer):
-    if share_data.use_vrtist_protocol():
-        return
 
     message = BlenderRemoveMessage()
     message.decode(buffer)
@@ -227,8 +215,6 @@ def build_data_remove(buffer):
 def send_data_renames(renames: RenameChangeset):
     if not renames:
         return
-    if share_data.use_vrtist_protocol():
-        return
 
     items = []
     for uuid, old_name, new_name, debug_info in renames:
@@ -241,8 +227,6 @@ def send_data_renames(renames: RenameChangeset):
 
 
 def build_data_rename(buffer):
-    if share_data.use_vrtist_protocol():
-        return
 
     message = BlenderRenamesMessage()
     message.decode(buffer)
