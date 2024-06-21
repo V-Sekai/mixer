@@ -289,9 +289,6 @@ class Room:
             common.Command(common.MessageType.CONTENT)
         )  # self.joinable will be set to true by creator later
 
-    def client_count(self):
-        return len(self._connections) + self.join_count
-
     def command_count(self):
         return len(self._commands)
 
