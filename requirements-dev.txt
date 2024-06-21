@@ -25,7 +25,6 @@ requests==2.23.0
 Sphinx==3.5.1
 sphinx-rtd-theme==0.5.1
 toml==0.10.1
-typed-ast==1.4.1
 typing==3.7.4.1
 typing-extensions==3.7.4.2
 unittest-xml-reporting==3.0.2

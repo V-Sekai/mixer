@@ -15,18 +15,10 @@ env:
 
 jobs:
   pre_release:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: [3.8]
+    runs-on: ubuntu-22.04
 
     steps:
       - uses: actions/checkout@v2
-
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{ matrix.python-version }}
 
       - name: Install dependencies
         run: |
@@ -42,91 +34,52 @@ jobs:
           mypy mixer
         continue-on-error: true
 
-    #   - name: Build docs
-    #     run: |
-    #       sphinx-build -b html docs docs/_build/html
-    #       rm -rf docs/_build/doctree
+      #   - name: Build docs
+      #     run: |
+      #       sphinx-build -b html docs docs/_build/html
+      #       rm -rf docs/_build/doctree
 
-    #   - name: Zip files
-    #     run: |
-    #       cp CHANGELOG.md README.md LICENSE mixer/
-    #       rm -rf mixer/blender_data/tests/
+      - name: Zip files
+        run: |
+          cp CHANGELOG.md README.md LICENSE mixer/
+          rm -rf mixer/blender_data/tests/
 
-    #   - name: Upload artifacts
-    #     uses: actions/upload-artifact@v2
-    #     with:
-    #       name: "${{ github.repository }}_${{ github.ref_name }}_${{ github.sha }}"
-    #       path: |
-    #         docs/_build
-    #         mixer
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: blender_mixer
+          path: |
+            docs/_build
+            mixer
 
-#   release:
-#     needs: pre_release
-#     runs-on: ubuntu-latest
-#     if: startsWith(github.ref, 'refs/tags/v')
+      # - name: Install operating system dependencies
+      #   run: |
+      #     sudo apt install -y python3 blender
 
-#     steps:
-#       - uses: actions/checkout@v2
+      # - name: Create local folders
+      #   run: |
+      #     mkdir -p gitlab/blender/cache
 
-#       - name: Set up Python 3.8
-#         uses: actions/setup-python@v2
-#         with:
-#           python-version: 3.8
+      # - name: Install Mixer in local blender
+      #   run: |
+      #     blender --background --python gitlab/install_mixer.py
 
-#       - name: Install dependencies
-#         run: |
-#           python -m pip install --upgrade pip
-#           pip install requests
+      # - name: Install test dependencies
+      #   run: |
+      #     python3 -m pip install unittest-xml-reporting parameterized unittest2 xmlrunner
 
-#       - name: Download artifacts
-#         uses: actions/download-artifact@v2
-#         with:
-#           name: "${{ github.repository }}_${{ github.ref_name }}_${{ github.sha }}"
-#           path: .
-
-#       - name: Create release
-#         run: |
-#           rm -rf mixer/blender_data/tests/
-#           python -m zipfile -c mixer-${{ github.ref_name }}.zip mixer/
-#           # You'll need to replace the following line with your own script or action for creating a release
-#           # python -m gitlab.release mixer-${{ github.ref_name }}.zip
-
-#       - name: Upload release asset
-#         uses: actions/upload-release-asset@v1
-#         env:
-#           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#         with:
-#           upload_url: ${{ steps.create_release.outputs.upload_url }}
-#           asset_path: ./mixer-${{ github.ref_name }}.zip
-#           asset_name: mixer-${{ github.ref_name }}.zip
-#           asset_content_type: application/zip
-
-#   test_base:
-#     needs: pre_release
-#     runs-on: windows-latest
-#     strategy:
-#       matrix:
-#         blender-version: ["2.92", "2.83", "2.93.beta", "3.0.alpha"]
-
-#     steps:
-#       - uses: actions/checkout@v2
-
-#       - name: Set up Python 3.8
-#         uses: actions/setup-python@v2
-#         with:
-#           python-version: 3.8
-
-#       - name: Install dependencies
-#         run: |
-#           python -m pip install --upgrade pip
-#           pip install requests
-
-#       - name: Download artifacts
-#         uses: actions/download-artifact@v2
-#         with:
-#           name: "${{ github.repository }}_${{ github.ref_name }}_${{ github.sha }}"
-#           path: .
-
-#       - name: Run tests
-#         run: |
-#           gitlab\run_unittest.bat
+      # - name: Run tests within blender
+      #   run: |
+      #     blender --background --python-exit-code 1 --python-expr "\
+      #     import bpy, os, unittest, xmlrunner; \
+      #     bpy.ops.preferences.addon_enable(module='mixer'); \
+      #     os.makedirs('logs/tests', exist_ok=True); \
+      #     with open('logs/tests/blender_data.xml', 'wb') as output: \
+      #         suite = unittest.defaultTestLoader.discover(os.path.dirname(os.path.realpath('mixer/blender_data/tests'))); \
+      #         runner = xmlrunner.XMLTestRunner(verbosity=2, output=output); \
+      #         result = runner.run(suite); \
+      #         if not result.wasSuccessful(): \
+      #             raise AssertionError('Tests failed')"
+      #     python3 -m xmlrunner discover --verbose tests.vrtist -o $MIXER_TEST_OUTPUT
+      #     python3 -m xmlrunner discover --verbose tests.broadcaster -o $MIXER_TEST_OUTPUT
+      #     python3 -m xmlrunner discover --verbose tests.blender -o $MIXER_TEST_OUTPUT
