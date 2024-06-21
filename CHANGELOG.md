@@ -1,8 +1,7 @@
-# Version 1.1.0 (Work in Progress)
+# Version 1.2.0 (Work in Progress)
 
 ## Changes
 
-- Incremented version to 1.1.0
 - Archival of Ubisoft team resources and migration to GitHub.
 
 ## Documentation
