@@ -38,12 +38,11 @@ def network_consumer(client, delegate):
             delegate.update_clients_attributes(clients_attributes)
 
 
-@unittest.skip("")
 class TestServer(unittest.TestCase):
     def setUp(self):
         self._delegate = Delegate()
         self._server = Server()
-        server_thread = threading.Thread(None, self._server.run)
+        server_thread = threading.Thread(target=self._server.run, args=(common.DEFAULT_PORT,))
         server_thread.start()
 
     def tearDown(self):
@@ -95,6 +94,7 @@ class TestServer(unittest.TestCase):
         self.assertFalse(client3.is_connected())
         self.assertEqual(server.client_count(), (0, 0))
 
+    @unittest.skip("")
     def test_join_one_room_one_client(self):
         delay = self.delay
         server = self._server
@@ -116,6 +116,7 @@ class TestServer(unittest.TestCase):
         self.assertEqual(len(d0.name_room), 1)
         self.assertIn(expected, d0.name_room)
 
+    @unittest.skip("")
     def test_join_one_room_two_clients(self):
         delay = self.delay
         server = self._server
@@ -147,6 +148,7 @@ class TestServer(unittest.TestCase):
         self.assertCountEqual(d0.name_room, expected)
         self.assertCountEqual(d1.name_room, expected)
 
+    @unittest.skip("")
     def test_join_one_room_two_clients_leave(self):
         delay = self.delay
         server = self._server

@@ -68,15 +68,6 @@ jobs:
           Expand-Archive -Path "blender.zip" -DestinationPath .
 
       - name: Run tests
-        shell: bash
+        shell: pwsh
         run: |
-          mkdir -p $MIXER_TEST_OUTPUT
-          $MIXER_PYTHON_3_PATH -m pip install unittest-xml-reporting parameterized unittest2 xmlrunner
-          $MIXER_BLENDER_EXE_PATH --background --python-exit-code 1 --python gitlab/install_mixer.py
-          if [ -f mixer/blender_data/tests/ci.py ]; then
-            exit 0
-          fi
-          $MIXER_BLENDER_EXE_PATH --background --python-exit-code 1 --python mixer/blender_data/tests/ci.py
-          $MIXER_PYTHON_3_PATH -m xmlrunner discover --verbose tests.vrtist -o $MIXER_TEST_OUTPUT
-          $MIXER_PYTHON_3_PATH -m xmlrunner discover --verbose tests.broadcaster -o $MIXER_TEST_OUTPUT
-          $MIXER_PYTHON_3_PATH -m xmlrunner discover --verbose tests.blender -o $MIXER_TEST_OUTPUT
+          ./cicd_test.ps1
