@@ -23,6 +23,8 @@ It updates the addon state according to this connection.
 import logging
 
 import bpy
+import sys
+import os
 import mixer
 from mixer.bl_utils import get_mixer_prefs
 from mixer.share_data import share_data
@@ -110,15 +112,13 @@ def wait_for_server(host, port):
 
 
 def start_local_server():
-    import mixer
-    import sys
-
     dir_path = Path(mixer.__file__).parent.parent  # broadcaster is submodule of mixer
 
+    args = {}
     if get_mixer_prefs().show_server_console:
-        args = {"creationflags": subprocess.CREATE_NEW_CONSOLE}
-    else:
-        args = {}
+        # Only add this flag if the OS is Windows
+        if os.name == 'nt':
+            args["creationflags"] = subprocess.CREATE_NEW_CONSOLE
 
     share_data.local_server_process = subprocess.Popen(
         [sys.executable, "-m", "mixer.broadcaster.apps.server", "--port", str(get_mixer_prefs().port)],

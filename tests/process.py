@@ -127,10 +127,13 @@ class BlenderProcess(Process):
             popen_args.extend([str(arg) for arg in script_args])
 
         popen_kwargs = {
-            "creationflags": subprocess.CREATE_NEW_CONSOLE,
             "shell": False,
             "env": env,
         }
+        
+        if os.name == 'nt':
+            popen_kwargs["creationflags"] = subprocess.CREATE_NEW_CONSOLE
+
         popen_kwargs.update(_popen_redirect)
         super().start(popen_args, popen_kwargs)
 
@@ -233,14 +236,13 @@ class PythonProcess(Process):
 
     def __init__(self):
         super().__init__()
-        blender_exe = blender_exe_path()
-        blender_dir = Path(blender_exe).parent
-        python_paths = list(blender_dir.glob("*/python/bin/python.exe"))
-        if len(python_paths) != 1:
+        blender_exe = 'blender'
+        python_exe_name = "python3"
+        python_paths = [python_exe_name]
+        if len(python_paths) == 0:
             raise RuntimeError(
-                f"Expected one python.exe from Blender at {blender_exe}, found {len(python_paths)} : {python_paths}. Configure MIXER_BLENDER_EXE_PATH"
+                f"Expected one {python_exe_name} from Blender at {blender_exe}, found {len(python_paths)} : {python_paths}. Configure MIXER_BLENDER_EXE_PATH"
             )
-
         self._python_path = str(python_paths[0])
         logger.info(f"Using python : {self._python_path}")
 
@@ -251,13 +253,16 @@ class PythonProcess(Process):
         # stdout will be a xmlrunner.result._DuplicateWriter
         # and redirecting onto it raises "io.UnsupportedOperation: fileno"
         popen_kwargs = {
-            "creationflags": subprocess.CREATE_NEW_CONSOLE,
             "shell": False,
         }
+        
+        # Only add this flag if the OS is Windows
+        if os.name == 'nt':
+            popen_kwargs["creationflags"] = subprocess.CREATE_NEW_CONSOLE
+
         popen_kwargs.update(_popen_redirect)
 
         return super().start(popen_args, popen_kwargs)
-
 
 class ServerProcess(PythonProcess):
     """
