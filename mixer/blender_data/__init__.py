@@ -33,7 +33,7 @@ try:
     import mixer.blender_data.shape_key_proxy
     import mixer.blender_data.armature_proxy
     import mixer.blender_data.struct_collection_proxy
-    import mixer.blender_data.struct_proxy  # noqa: 401
+    import mixer.blender_data.struct_proxy  # noqa: F401
 except (ImportError, AttributeError):
     # Import is not possible when not run within Blender (unittest)
     pass

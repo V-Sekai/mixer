@@ -1,0 +1,132 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - "**"
+  pull_request:
+    branches:
+      - "**"
+
+env:
+  MIXER_BASH_EXE: C:\Program Files\Git\bin\bash.exe
+  VRTIST_PORT: 25600
+  MIXER_TEST_OUTPUT: logs\tests
+
+jobs:
+  pre_release:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.8]
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install ruff pep8-naming mypy sphinx sphinx-rtd-theme requests --constraint requirements-dev.txt
+
+      - name: Run ruff
+        run: |
+          ruff -v mixer tests extra
+
+    #   - name: Run mypy
+    #     run: |
+    #       mypy mixer
+    #     continue-on-error: true
+
+    #   - name: Build docs
+    #     run: |
+    #       sphinx-build -b html docs docs/_build/html
+    #       rm -rf docs/_build/doctree
+
+    #   - name: Zip files
+    #     run: |
+    #       cp CHANGELOG.md README.md LICENSE mixer/
+    #       rm -rf mixer/blender_data/tests/
+
+    #   - name: Upload artifacts
+    #     uses: actions/upload-artifact@v2
+    #     with:
+    #       name: "${{ github.repository }}_${{ github.ref_name }}_${{ github.sha }}"
+    #       path: |
+    #         docs/_build
+    #         mixer
+
+#   release:
+#     needs: pre_release
+#     runs-on: ubuntu-latest
+#     if: startsWith(github.ref, 'refs/tags/v')
+
+#     steps:
+#       - uses: actions/checkout@v2
+
+#       - name: Set up Python 3.8
+#         uses: actions/setup-python@v2
+#         with:
+#           python-version: 3.8
+
+#       - name: Install dependencies
+#         run: |
+#           python -m pip install --upgrade pip
+#           pip install requests
+
+#       - name: Download artifacts
+#         uses: actions/download-artifact@v2
+#         with:
+#           name: "${{ github.repository }}_${{ github.ref_name }}_${{ github.sha }}"
+#           path: .
+
+#       - name: Create release
+#         run: |
+#           rm -rf mixer/blender_data/tests/
+#           python -m zipfile -c mixer-${{ github.ref_name }}.zip mixer/
+#           # You'll need to replace the following line with your own script or action for creating a release
+#           # python -m gitlab.release mixer-${{ github.ref_name }}.zip
+
+#       - name: Upload release asset
+#         uses: actions/upload-release-asset@v1
+#         env:
+#           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#         with:
+#           upload_url: ${{ steps.create_release.outputs.upload_url }}
+#           asset_path: ./mixer-${{ github.ref_name }}.zip
+#           asset_name: mixer-${{ github.ref_name }}.zip
+#           asset_content_type: application/zip
+
+#   test_base:
+#     needs: pre_release
+#     runs-on: windows-latest
+#     strategy:
+#       matrix:
+#         blender-version: ["2.92", "2.83", "2.93.beta", "3.0.alpha"]
+
+#     steps:
+#       - uses: actions/checkout@v2
+
+#       - name: Set up Python 3.8
+#         uses: actions/setup-python@v2
+#         with:
+#           python-version: 3.8
+
+#       - name: Install dependencies
+#         run: |
+#           python -m pip install --upgrade pip
+#           pip install requests
+
+#       - name: Download artifacts
+#         uses: actions/download-artifact@v2
+#         with:
+#           name: "${{ github.repository }}_${{ github.ref_name }}_${{ github.sha }}"
+#           path: .
+
+#       - name: Run tests
+#         run: |
+#           gitlab\run_unittest.bat
