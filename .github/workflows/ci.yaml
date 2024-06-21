@@ -37,10 +37,10 @@ jobs:
         run: |
           ruff -v mixer tests extra
 
-    #   - name: Run mypy
-    #     run: |
-    #       mypy mixer
-    #     continue-on-error: true
+      - name: Run mypy
+        run: |
+          mypy mixer
+        continue-on-error: true
 
     #   - name: Build docs
     #     run: |

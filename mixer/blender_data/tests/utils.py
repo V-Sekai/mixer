@@ -17,13 +17,12 @@
 
 import functools
 from pathlib import Path
-from typing import Iterable, List, Union
+from typing import List, Union, Optional
 import unittest
 
 from bpy import data as D  # noqa
 from bpy import types as T  # noqa
 from mixer.blender_data.filter import test_properties
-
 
 this_folder = Path(__file__).parent
 test_blend_file = str(this_folder / "test_data.blend")
@@ -128,10 +127,9 @@ def bl_equals(attr_a, attr_b, msg=None, skip_name=False, synchronized_properties
 
     return True
 
-
-def run_tests(test_names: Union[str, List[str]] = None):
+def run_tests(test_names: Optional[Union[str, List[str]]] = None):
     if test_names is not None:
-        test_names = test_names if isinstance(test_names, Iterable) else [test_names]
+        test_names = [test_names] if isinstance(test_names, str) else test_names
         suite = unittest.defaultTestLoader.loadTestsFromNames(test_names)
     else:
         this_dir = str(Path(__file__).parent)
