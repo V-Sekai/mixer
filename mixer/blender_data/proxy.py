@@ -170,6 +170,12 @@ class Proxy:
 
     def init(self, _):
         pass
+    
+    def __init__(self):
+        self._data = {}
+
+    def __getitem__(self, key):
+        return self._data[key]
 
     def data(self, key_or_path: Union[int, str, Iterable[Union[int, str]]], resolve_delta=True) -> Any:
         """Return the item identified by key_or_path in this proxy hierarchy.
