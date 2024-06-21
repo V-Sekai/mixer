@@ -12,5 +12,5 @@ $BLENDER_DIR = "blender-3.3.19-windows-x64"
 
 # Run the tests and generate XML reports
 # & "$BLENDER_DIR/3.3/python/bin/python.exe" -m xmlrunner discover --verbose tests.vrtist -o logs/tests
-& "$BLENDER_DIR/3.3/python/bin/python.exe" -m pytest --timeout=3 tests/broadcaster/test_server.py
+& "$BLENDER_DIR/3.3/python/bin/python.exe" -m xmlrunner discover --verbose tests.broadcaster -o logs/tests
 # & "$BLENDER_DIR/3.3/python/bin/python.exe" -m xmlrunner discover --verbose tests.blender -o logs/tests
