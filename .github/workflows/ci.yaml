@@ -61,22 +61,21 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: Cache Blender
+        id: cache-blender
+        uses: actions/cache@v2
+        with:
+          path: blender.zip
+          key: ${{ runner.os }}-blender-${{ hashFiles('**/lockfiles') }}
+
       - name: Download and extract Blender
+        if: steps.cache-blender.outputs.cache-hit != 'true'
         shell: powershell
         run: |
           Invoke-WebRequest -Uri "https://mirrors.ocf.berkeley.edu/blender/release/Blender3.3/blender-3.3.19-windows-x64.zip" -OutFile "blender.zip"
           Expand-Archive -Path "blender.zip" -DestinationPath .
 
       - name: Run tests
-        shell: bash
+        shell: pwsh
         run: |
-          mkdir -p $MIXER_TEST_OUTPUT
-          $MIXER_PYTHON_3_PATH -m pip install unittest-xml-reporting parameterized unittest2 xmlrunner
-          $MIXER_BLENDER_EXE_PATH --background --python-exit-code 1 --python gitlab/install_mixer.py
-          if [ -f mixer/blender_data/tests/ci.py ]; then
-            exit 0
-          fi
-          $MIXER_BLENDER_EXE_PATH --background --python-exit-code 1 --python mixer/blender_data/tests/ci.py
-          $MIXER_PYTHON_3_PATH -m xmlrunner discover --verbose tests.vrtist -o $MIXER_TEST_OUTPUT
-          $MIXER_PYTHON_3_PATH -m xmlrunner discover --verbose tests.broadcaster -o $MIXER_TEST_OUTPUT
-          $MIXER_PYTHON_3_PATH -m xmlrunner discover --verbose tests.blender -o $MIXER_TEST_OUTPUT
+          ./cicd_test.ps1

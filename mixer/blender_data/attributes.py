@@ -198,7 +198,7 @@ def write_attribute(
                 # f"Attempt to write to non-existent attribute {bl_instance}.{key} : skipped"
                 return
 
-            if not prop.is_readonly:
+            if not prop.is_readonly and not (isinstance(parent, bpy.types.Collection) and key == 'name'):
                 try:
                     setattr(parent, key, value)
                 except TypeError as e:

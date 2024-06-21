@@ -598,6 +598,17 @@ class Server:
         sock.close()
 
 
+    def shutdown(self):
+        global SHUTDOWN
+        SHUTDOWN = True
+
+        with self._mutex:
+            for connection in list(self._connections.values()):
+                self.handle_client_disconnect(connection)
+
+        logger.info("Server has been shut down")
+
+
 def main():
     global _log_server_updates
     args, args_parser = parse_cli_args()
