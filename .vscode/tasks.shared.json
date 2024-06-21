@@ -4,9 +4,14 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "Run flake8",
+      "label": "Run ruff",
       "type": "shell",
-      "command": "python -m flake8"
+      "command": "python -m ruff"
+    },
+    {
+      "label": "blender Launch Script",
+      "type": "shell",
+      "command": "${workspaceFolder}/blender-3.3.19-windows-x64/blender.exe --background --python-exit-code 1 --python mixer/blender_data/tests/ci.py",
     }
   ]
 }
