@@ -17,7 +17,7 @@
 
 import functools
 from pathlib import Path
-from typing import Iterable, List, Union, Optional
+from typing import List, Union, Optional
 import unittest
 
 from bpy import data as D  # noqa
