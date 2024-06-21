@@ -61,7 +61,15 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: Cache Blender
+        id: cache-blender
+        uses: actions/cache@v2
+        with:
+          path: blender.zip
+          key: ${{ runner.os }}-blender-${{ hashFiles('**/lockfiles') }}
+
       - name: Download and extract Blender
+        if: steps.cache-blender.outputs.cache-hit != 'true'
         shell: powershell
         run: |
           Invoke-WebRequest -Uri "https://mirrors.ocf.berkeley.edu/blender/release/Blender3.3/blender-3.3.19-windows-x64.zip" -OutFile "blender.zip"
