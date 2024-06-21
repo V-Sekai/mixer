@@ -4,11 +4,6 @@
 
 - Archival of Ubisoft team resources and migration to GitHub.
 
-## Documentation
-
-- Fixed README.md (thanks @XenioxYT, @b4zz4)
-- Added explicit warning about undo limitations.
-
 > **Note**: The Ubisoft team's resources have been archived and the project has been moved to GitHub for continued development and maintenance.
 
 # 1.1.0 (2022-08-01)
