@@ -2,7 +2,7 @@
 
 Mixer is a Blender addon for real-time collaboration in Blender. It allows multiple Blender users to work on the same scene simultaneously and is developed by the R&D department of Ubisoft Animation Studio.
 
-> **Important**: Please note that Mixer only works on Blender 3.0 currently.
+> **Important**: Please note that Mixer only works on Blender 3.1 currently.
 
 **Please note that Ubisoft is no longer maintaining this project. The V-Sekai team is now maintaining Mixer.**
 
