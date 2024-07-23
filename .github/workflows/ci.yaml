@@ -52,7 +52,7 @@ jobs:
           name: blender_mixer
           path: |
             docs/_build
-            mixer
+            addons/mixer
 
   startup_windows:
     needs: pre_release
