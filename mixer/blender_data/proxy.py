@@ -175,6 +175,8 @@ class Proxy:
         self._data = {}
 
     def __getitem__(self, key):
+        if key not in self._data:
+            raise KeyError(f"Key '{key}' not found in data")
         return self._data[key]
 
     def data(self, key_or_path: Union[int, str, Iterable[Union[int, str]]], resolve_delta=True) -> Any:
@@ -192,7 +194,7 @@ class Proxy:
         for item in key_or_path:
             try:
                 data = data[item]
-            except IndexError:
+            except (IndexError, KeyError):
                 return None
             except TypeError:
                 try:
