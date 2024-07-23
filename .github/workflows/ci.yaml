@@ -29,7 +29,7 @@ jobs:
 
       - name: Run ruff
         run: |
-          ruff -v mixer tests extra
+          ruff -v addons/mixer tests extra
 
       - name: Run mypy
         run: |
