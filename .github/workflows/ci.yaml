@@ -43,8 +43,8 @@ jobs:
 
       - name: Zip files
         run: |
-          cp CHANGELOG.md README.md LICENSE mixer/
-          rm -rf mixer/blender_data/tests/
+          cp CHANGELOG.md README.md LICENSE addons/mixer/
+          rm -rf addons/mixer/blender_data/tests/
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v2
