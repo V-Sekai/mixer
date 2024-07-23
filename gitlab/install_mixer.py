@@ -10,7 +10,7 @@ zip_basename = Path(__file__).parent / "blender" / "mixer_unittest"
 if os.path.exists(str(zip_basename) + ".zip"):
     os.remove(str(zip_basename) + ".zip")
 
-zip_name = shutil.make_archive(zip_basename, "zip", src_dir, "mixer")
+zip_name = shutil.make_archive(zip_basename, "zip", src_dir, "addons/mixer")
 
 bpy.ops.preferences.addon_install(overwrite=True, filepath=zip_name)
 bpy.ops.preferences.addon_enable(module="mixer")
