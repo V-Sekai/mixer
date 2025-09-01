@@ -1,18 +1,17 @@
-import unittest
-
-from tests import files_folder
-from tests.blender.blender_testcase import BlenderTestCase
+import pytest
+from tests.blender.test_proxy import MixerTestCaseWrapper
 from tests.mixer_testcase import BlenderDesc
+from tests import files_folder
 
 
-class TestCase(BlenderTestCase):
-    def setUp(self):
+class TestCase(MixerTestCaseWrapper):
+    def setup_method(self):
         sender_blendfile = files_folder() / "empty.blend"
         receiver_blendfile = files_folder() / "empty.blend"
         sender = BlenderDesc(load_file=sender_blendfile, wait_for_debugger=False)
         receiver = BlenderDesc(load_file=receiver_blendfile, wait_for_debugger=False)
         blenderdescs = [sender, receiver]
-        super().setUp(blenderdescs=blenderdescs)
+        super().setup_method(blenderdescs=blenderdescs)
 
 
 class TestAnimationData(TestCase):
@@ -171,4 +170,4 @@ bpy.context.view_layer.update()
 
 
 if __name__ == "__main__":
-    unittest.main()
+    pytest.main([__file__])
