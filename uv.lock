@@ -240,6 +240,7 @@ source = { editable = "." }
 dependencies = [
     { name = "bpy" },
     { name = "pytest" },
+    { name = "ruff" },
 ]
 
 [package.optional-dependencies]
@@ -288,6 +289,7 @@ requires-dist = [
     { name = "pytest", specifier = ">=8.0.0" },
     { name = "regex", marker = "extra == 'dev'", specifier = ">=2024.5.15" },
     { name = "requests", marker = "extra == 'dev'", specifier = ">=2.25.0" },
+    { name = "ruff", specifier = ">=0.4.10" },
     { name = "ruff", marker = "extra == 'dev'", specifier = "==0.4.10" },
     { name = "sphinx", marker = "extra == 'dev'", specifier = ">=6.0.0,<8.0.0" },
     { name = "sphinx-rtd-theme", marker = "extra == 'dev'", specifier = "==0.5.1" },
