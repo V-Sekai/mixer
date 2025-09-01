@@ -177,6 +177,9 @@ class Client:
     def send_list_rooms(self):
         return self.send_command(common.Command(common.MessageType.LIST_ROOMS))
 
+    def send_list_clients(self):
+        return self.send_command(common.Command(common.MessageType.LIST_CLIENTS))
+
     def set_room_keep_open(self, room_name: str, value: bool):
         return self.send_command(
             common.Command(

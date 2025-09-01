@@ -47,6 +47,12 @@ class MessageType(IntEnum):
     A known issue of this strategy is that it is difficult to sync the code of different kind of clients (blender, vrtist)
     according to changes here. This will be adressed in the future by improving the protocol to include the notion
     of client types.
+    
+    REFERENCES:
+    - LIST_CLIENTS
+    - LIST_ROOMS
+    - SET_CLIENT_NAME
+    - CONTENT (room joinability protocol)
 
     Documentation to update if you change this: doc/protocol.md
     """
