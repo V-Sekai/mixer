@@ -43,6 +43,7 @@ from mixer.broadcaster.common import update_attributes_and_get_diff
 from mixer.broadcaster.socket import Socket
 
 SHUTDOWN = False
+_server_sock = None
 
 logger = logging.getLogger() if __name__ == "__main__" else logging.getLogger(__name__)
 _log_server_updates: bool = False
@@ -402,6 +403,32 @@ class Server:
         self.latency: float = 0.0  # seconds
         self.bandwidth: float = 0.0  # MBps
 
+    def client_count(self):
+        """
+        Return (rooms_clients, connected_clients - rooms_clients)
+
+        This represents the number of clients in rooms and the number of connected
+        clients not in any room.
+        """
+        with self._mutex:
+            connected_clients = len(self._connections)
+            rooms_clients = sum(room.client_count() for room in self._rooms.values())
+            return (rooms_clients, connected_clients - rooms_clients)
+
+    def shutdown(self):
+        """
+        Shutdown the server by setting the global SHUTDOWN flag.
+        This will cause the run loop to exit.
+        """
+        global SHUTDOWN, _server_sock
+        SHUTDOWN = True
+        # Close the socket to wake up the select call
+        if _server_sock:
+            try:
+                _server_sock.close()
+            except Exception:
+                pass
+
     def delete_room(self, room_name: str):
         with self._mutex:
             if room_name not in self._rooms:
@@ -566,15 +593,16 @@ class Server:
         )
 
     def run(self, port):
-        global SHUTDOWN
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        global SHUTDOWN, _server_sock
+        _server_sock = sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         binding_host = ""
         sock.bind((binding_host, port))
         sock.setblocking(0)
         sock.listen(1000)
 
+        print(f"Server: Bound to {binding_host}:{port}, listening")
         logger.info("Listening on port % s", port)
-        while True:
+        while not SHUTDOWN:
             try:
                 timeout = 0.1  # Check for a new client every 10th of a second
                 readable, _, _ = select.select([sock], [], [], timeout)
@@ -590,12 +618,18 @@ class Server:
                     connection.start()
                     logger.info(f"New connection from {client_address}")
                     self.broadcast_client_update(connection, connection.client_attributes())
-            except KeyboardInterrupt:
+                    print(f"Server: Added connection {connection.unique_id}, total connections: {len(self._connections)}")
+            except (OSError, ValueError):
+                # Socket was closed, exit
                 break
 
         logger.info("Shutting down server")
         SHUTDOWN = True
-        sock.close()
+        try:
+            sock.close()
+        except Exception:
+            pass
+        _server_sock = None
 
 
 def main():
