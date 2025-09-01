@@ -24,6 +24,9 @@ class VRtistTestCase(MixerTestCase):
             self.vrtist_protocol = True
         super().__init__(*args, **kwargs)
 
+        # Add failureException for unittest compatibility
+        self.failureException = AssertionError
+
     def set_active_scene(self, name: str):
         """
         Set the active scene, so that flush_collection() triggers an update.

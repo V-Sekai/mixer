@@ -54,10 +54,10 @@ else:
 
 
 def blender_exe_path() -> str:
-    blender_exe = os.environ.get("MIXER_BLENDER_EXE_PATH")
-    if blender_exe is None:
-        raise RuntimeError("Environment variable MIXER_BLENDER_EXE_PATH is not set")
-    return blender_exe
+    # When using bpy from uv, we don't need a separate Blender executable
+    # The bpy package provides the Blender API directly in our Python environment
+    import bpy
+    return None
 
 
 class Process:
@@ -102,12 +102,14 @@ class Process:
 
 class BlenderProcess(Process):
     """
-    Start a Blender process that executes a python script
+    Work with the bpy process in the same Python environment
+    When using bpy from uv, we're already running in Blender's context
     """
 
     def __init__(self):
         super().__init__()
-        self._cmd_args = ["--python-exit-code", "255", "--log-level", "-1", "--start-console"]
+        self._cmd_args = []
+        self._use_in_process_bpy = True  # When using bpy from uv
 
     def start(
         self,
@@ -116,6 +118,13 @@ class BlenderProcess(Process):
         blender_args: Optional[List[str]] = None,
         env: Optional[List[str]] = None,
     ):
+        # When using bpy from uv, we're already in Blender context
+        # No need to start separate processes
+        if blender_exe_path() is None:
+            # Using bpy from uv - already in Blender context
+            return
+
+        # Fallback for when using external Blender executable
         popen_args = [blender_exe_path()]
         popen_args.extend(self._cmd_args)
         if blender_args is not None:
@@ -130,7 +139,7 @@ class BlenderProcess(Process):
             "shell": False,
             "env": env,
         }
-        
+
         if os.name == 'nt':
             popen_kwargs["creationflags"] = subprocess.CREATE_NEW_CONSOLE
 

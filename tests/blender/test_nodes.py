@@ -1,18 +1,22 @@
-import unittest
+import pytest
 
 from tests import files_folder
-from tests.blender.blender_testcase import BlenderTestCase
+from tests.conftest import BlenderTestMixin, TestAssertionsMixin
 from tests.mixer_testcase import BlenderDesc
 
 
-class TestCase(BlenderTestCase):
-    def setUp(self):
+class TestCase(BlenderTestMixin, TestAssertionsMixin):
+    @pytest.fixture(autouse=True)
+    def setup_testcase(self, tmp_path, blender_empty_blend):
+        """Pytest fixture for setup that runs automatically"""
+        self.tmp_path = tmp_path
+        self.blender_empty_blend = blender_empty_blend
         sender_blendfile = files_folder() / "empty.blend"
         receiver_blendfile = files_folder() / "empty.blend"
         sender = BlenderDesc(load_file=sender_blendfile, wait_for_debugger=False)
         receiver = BlenderDesc(load_file=receiver_blendfile, wait_for_debugger=False)
         blenderdescs = [sender, receiver]
-        super().setUp(blenderdescs=blenderdescs)
+        self.setup_blender_instances(blenderdescs=blenderdescs)
 
 
 override_context = """
@@ -82,8 +86,6 @@ bpy.data.materials["mat0"].name="mat0"
 
 
 class TestNodes(TestCase):
-    def setUp(self):
-        super().setUp()
 
     def test_nodes_initial_sync(self):
         action = create_material + add_color_node
@@ -262,7 +264,7 @@ node_tree.links.new(sock, nodes["MIX"].inputs["Color1"])
         self.send_string(self.add_input)
         self.end_test()
 
-    @unittest.skip("node group socked default value comparison fails")
+    @pytest.mark.skip(reason="node group socked default value comparison fails")
     def test_move_interface(self):
         # after move_socket, the default value of the group input sockets do not match
         self.send_string(create_material)
@@ -323,7 +325,7 @@ if bpy.app.version >= (2, 92, 0):
         self.send_string(hack, to=1, sleep=2.0)
         self.end_test()
 
-    @unittest.skip("Randomly fails")
+    @pytest.mark.skip(reason="Randomly fails")
     def test_input_int(self):
         # Input float has a bug before 2.93 https://developer.blender.org/T86876
         self.send_string(self.create)
@@ -341,7 +343,3 @@ modifier.show_viewport = True
 """
         self.send_string(update, sleep=5)
         self.end_test()
-
-
-if __name__ == "main":
-    unittest.main()

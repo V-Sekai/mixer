@@ -239,6 +239,7 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "bpy" },
+    { name = "parameterized" },
     { name = "pytest" },
     { name = "ruff" },
 ]
@@ -282,6 +283,7 @@ requires-dist = [
     { name = "idna", marker = "extra == 'dev'", specifier = ">=2.10" },
     { name = "importlib-metadata", marker = "extra == 'dev'", specifier = ">=1.7.0" },
     { name = "mypy", marker = "extra == 'dev'", specifier = "==1.10.0" },
+    { name = "parameterized", specifier = ">=0.7.4" },
     { name = "parameterized", marker = "extra == 'dev'", specifier = "==0.7.4" },
     { name = "pathspec", marker = "extra == 'dev'", specifier = ">=0.8.0" },
     { name = "pep8-naming", marker = "extra == 'dev'", specifier = ">=0.10.0" },

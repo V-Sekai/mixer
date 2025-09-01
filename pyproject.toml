@@ -11,6 +11,7 @@ dependencies = [
     "pytest>=8.0.0",
     "bpy==4.5.2",
     "ruff>=0.4.10",
+    "parameterized>=0.7.4",
 ]
 
 [project.optional-dependencies]
@@ -45,7 +46,7 @@ minversion = "8.0"
 addopts = "--strict-markers --disable-warnings"
 testpaths = ["tests"]
 python_files = ["test_*.py"]
-python_classes = ["Test*"]
+python_classes = ["*Test*", "Test*", "TestCase*", "TestImage*"]
 python_functions = ["test_*"]
 pythonpath = [".", "addons"]
 

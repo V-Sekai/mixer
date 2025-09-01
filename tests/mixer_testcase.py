@@ -83,7 +83,7 @@ class MixerTestCase:
         return self._blenders[1]
 
     def setup_method(
-        self,
+        self, method,
         blenderdescs: Tuple[BlenderDesc, BlenderDesc] = (BlenderDesc(), BlenderDesc()),
         server_args: Optional[List[str]] = None,
         join=True,
@@ -133,7 +133,7 @@ class MixerTestCase:
             self.shutdown()
             raise
 
-    def teardown_method(self):
+    def teardown_method(self, method):
         self.shutdown()
 
     def shutdown(self):
@@ -433,6 +433,8 @@ class MixerTestCase:
             raise self.failureException(f"Exception {e!r} during disconnect_mixer(). Possible Blender crash")
 
     def send_string(self, s: str, to: int = 0, sleep: float = 0.5):
+        # Ensure to parameter is integer (fix for float conversion bug)
+        to = int(to)
         try:
             self._blenders[to].send_string(s, sleep)
         except Exception as e:
