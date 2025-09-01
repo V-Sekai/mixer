@@ -6,10 +6,10 @@ from dataclasses import dataclass
 import json
 import logging
 from pathlib import Path
+import pytest
 import sys
 import time
 from typing import Any, Iterable, List, Optional, Tuple
-import unittest
 
 from tests.blender_app import BlenderApp
 from tests.grabber import Grabber, CommandStream
@@ -29,7 +29,7 @@ class BlenderDesc:
     wait_for_debugger: bool = False
 
 
-class MixerTestCase(unittest.TestCase):
+class MixerTestCase:
     """
     Base test case class for Mixer.
 
@@ -42,10 +42,10 @@ class MixerTestCase(unittest.TestCase):
     - test success/failure
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self):
         self.latency = 0
         self.expected_counts = {}
-        super().__init__(*args, **kwargs)
+        self.vrtist_protocol = False  # Default to False, can be overridden
         self._log_level = logging.WARNING
         self._server_process: ServerProcess = ServerProcess()
         self._blenders: List[BlenderApp] = []
@@ -82,7 +82,7 @@ class MixerTestCase(unittest.TestCase):
     def _receiver(self):
         return self._blenders[1]
 
-    def setUp(
+    def setup_method(
         self,
         blenderdescs: Tuple[BlenderDesc, BlenderDesc] = (BlenderDesc(), BlenderDesc()),
         server_args: Optional[List[str]] = None,
@@ -92,7 +92,6 @@ class MixerTestCase(unittest.TestCase):
         if a blendfile if not specified, blender will start with its default file.
         Not recommended) as it is machine dependent
         """
-        super().setUp()
         try:
             python_port = 8081
             # do not the the default ptvsd port as it will be in use when debugging the TestCase
@@ -107,7 +106,7 @@ class MixerTestCase(unittest.TestCase):
             for i, blenderdesc in enumerate(blenderdescs):
                 shared_folders = self.shared_folders[i] if i < len(self.shared_folders) else []
                 if not isinstance(shared_folders, (list, tuple)):
-                    self.fail(f"shared_folder must be a list or tuple, not a {type(shared_folders)}")
+                    pytest.fail(f"shared_folder must be a list or tuple, not a {type(shared_folders)}")
 
                 window_x = str(i * window_width)
                 args = ["--window-geometry", window_x, "0", "960", "1080"]
@@ -134,9 +133,8 @@ class MixerTestCase(unittest.TestCase):
             self.shutdown()
             raise
 
-    def tearDown(self):
+    def teardown_method(self):
         self.shutdown()
-        super().tearDown()
 
     def shutdown(self):
         # quit and wait
@@ -162,7 +160,7 @@ class MixerTestCase(unittest.TestCase):
             # time.sleep(1)
             self._receiver.disconnect_mixer()
         except Exception as e:
-            raise self.failureException(f"Exception during disconnect():\n{e!r}\nPossible Blender crash") from None
+            pytest.fail(f"Exception during disconnect():\n{e!r}\nPossible Blender crash")
 
         # wait for disconnect before killing the server. Avoids a disconnect operator context error message
         time.sleep(0.5)
@@ -204,7 +202,7 @@ class MixerTestCase(unittest.TestCase):
                 try:
                     grabber.grab(host, port, f"mixer_grab_{i}")
                 except Exception as e:
-                    raise self.failureException(f"Grab {i}: ", *e.args) from None
+                    pytest.fail(f"Grab {i}: {e!r}")
 
         finally:
             server_process.kill()
@@ -407,7 +405,7 @@ class MixerTestCase(unittest.TestCase):
             if rc is not None:
                 self._receiver.kill()
                 if rc != 0:
-                    self.fail(f"sender return code {rc} ({hex(rc)})")
+                    pytest.fail(f"sender return code {rc} ({hex(rc)})")
                 else:
                     return
 

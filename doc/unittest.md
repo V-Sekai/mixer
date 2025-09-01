@@ -1,12 +1,42 @@
-# Unit tests
+# UNIT TESTS
 
-## Running unit test on the developer workstation
+## Running unit tests on the developer workstation
 
-Unit tests use the `unittest` package. Most of them will start a `broadcaster` server and two instances of Blender. The tests will remotely execute python scripts in the Blender instances, so that they connect to the server and execute  Blender python code scripts to modify the current document, and thus automatically synchronize. After all command are completed, the test grabs the miser command stream from each Blender and compares them.
+Unit tests use modern `pytest` v8.4.1 and are managed exclusively via `uv` package manager. The distributed nature of these tests automatically:
 
-Running the unit test require the `MIXER_BLENDER_EXE_PATH` environment variable to be set with the absolute path to the Blender that will be used for testing.
+1. **Starts a broadcaster server** for communication
+2. **Launches multiple Blender instances** (sender and receiver)
+3. **Executes Python commands remotely** in each Blender instance
+4. **Synchronizes Blender scenes** automatically through the mixer add-on
+5. **Compares synchronization results** between all instances
 
-To start the tests from VScode, make sure that the addon is installed in the Blender instance that will be started, possibly by launching it once via VScode [Blender development addon](https://github.com/JacquesLucke/blender_vscode)
+### Prerequisites
+
+Running the unit tests requires the `MIXER_BLENDER_EXE_PATH` environment variable to be set with the absolute path to the Blender executable:
+
+```bash
+export MIXER_BLENDER_EXE_PATH=/path/to/blender-binary
+```
+
+### Execution
+
+Run all tests using the uv-exclusive workflow:
+
+```bash
+uv run python -m pytest tests/
+```
+
+Run specific test files:
+```bash
+uv run python -m pytest tests/test_specific_file.py
+```
+
+Run with more verbosity:
+```bash
+uv run python -m pytest tests/ -v --tb=short
+```
+
+To start the tests from VSCode, make sure that the addon is installed in the Blender instance that will be started, possibly by launching it once via VSCode [Blender development addon](https://github.com/JacquesLucke/blender_vscode)
 
 
 ## CI/CD on unit tests
