@@ -1,2 +1,52 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "mixer"
+description = "Blender mixer addon"
+version = "0.1.0"
+requires-python = ">=3.11,<3.12"
+dependencies = [
+    "pytest>=8.0.0",
+    "bpy==4.5.2",
+]
+
+[project.optional-dependencies]
+dev = [
+    "ruff==0.4.10",
+    "mypy==1.10.0",
+    "sphinx>=6.0.0,<8.0.0",
+    "sphinx-rtd-theme==0.5.1",
+    "parameterized==0.7.4",
+    "unittest-xml-reporting==3.0.2",
+    "typing-extensions>=4.1.0",
+    "requests>=2.25.0",
+    "urllib3>=1.25.0",
+    "idna>=2.10",
+    "certifi>=2020.6.0",
+    "chardet>=3.0.0",
+    "click>=7.0.0",
+    "attrs>=19.3.0,<25.0.0",
+    "zipp>=3.1.0",
+    "importlib-metadata>=1.7.0",
+    "toml>=0.10.0",
+    "appdirs>=1.4.0",
+    "pathspec>=0.8.0",
+    "regex>=2024.5.15",
+    "entrypoints>=0.3",
+    "pycodestyle>=2.6.0",
+    "pep8-naming>=0.10.0",
+]
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+addopts = "--strict-markers --disable-warnings"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+pythonpath = ["addons"]
+
 [tool.black]
 line-length = 120
