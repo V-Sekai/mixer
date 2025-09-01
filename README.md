@@ -12,6 +12,66 @@ Mixer is a Blender addon for real-time collaboration in Blender. It allows multi
 
 **However, we will do our best to improve Mixer based on your feedback to provide a memorable creative collaborative experience. Have fun!**
 
+## Development Setup
+
+### Environment Setup
+
+This project uses modern Python dependency management tools. Choose one of the following approaches:
+
+### Using UV (Recommended)
+
+```bash
+# Install UV if not already installed
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Create UV environment and install dependencies
+cd /path/to/mixer
+uv sync --extra dev
+
+# Due to UV's virtual environment isolation, you must set PYTHONPATH to access the local mixer addon
+# For most commands:
+PYTHONPATH="$(pwd)/addons:$(pwd)" uv run pytest
+PYTHONPATH="$(pwd)/addons:$(pwd)" uv run python -c "import mixer; print('success')"
+
+# For long shell sessions:
+export PYTHONPATH="$(pwd)/addons:$(pwd)"
+uv run bash
+```
+
+### Alternative: Direct Python
+
+```bash
+# Install Python dependencies (bpy comes from Blender installation)
+pip install -r requirements-dev.txt
+# Note: bpy is provided by your Blender installation, not pip
+
+# Make mixer importable (may need Blender in PATH)
+PYTHONPATH="$(pwd)/addons:$(pwd)" python
+
+# For Blender integration testing, ensure Blender is accessible:
+# - Blender should be in your PATH, OR
+# - Set BLENDER_PATH environment variable if not in PATH
+```
+
+### Running Tests
+
+```bash
+# Environment variables needed for all test commands
+export PYTHONPATH="$(pwd)/addons:$(pwd)"
+
+# Basic tests (framework validation)
+uv run pytest tests/test_test.py -v
+
+# Blender-specific tests (require Blender binary)
+uv run pytest tests/blender/ -v
+
+# Networking tests
+uv run pytest tests/broadcaster/ -v
+
+# All tests with coverage
+uv run pytest --cov=mixer
+```
+
 ## Support
 
 The active support repository is on the [Mixer Github repository](https://github.com/V-Sekai/mixer).
@@ -19,6 +79,57 @@ The active support repository is on the [Mixer Github repository](https://github
 ## Feedback and Contribution
 
 You can also get involved in the development of Mixer. Discover how by reading these [contribution guidelines](doc/README.md).
+
+## Features
+
+Mixer enables collaborative 3D editing across multiple Blender instances and users in real-time.
+
+## Installation
+
+1. Download the addon from releases
+2. Install in Blender: Edit > Preferences > Add-ons > Install
+
+## Usage
+
+After installation, the Mixer panel will appear in the 3D View's sidebar allowing you to:
+
+- Join/create collaborative rooms
+- Real-time synchronize edits
+- Chat with collaborators
+
+## Development
+
+### Running Tests
+
+```bash
+# Basic tests (pytest framework validation)
+PYTHONPATH="$(pwd)/addons:$(pwd)" uv run pytest tests/test_test.py -v
+
+# Blender tests (require Blender binary)
+PYTHONPATH="$(pwd)/addons:$(pwd)" uv run pytest tests/blender/ -v
+
+# Networking tests
+PYTHONPATH="$(pwd)/addons:$(pwd)" uv run pytest tests/broadcaster/ -v
+```
+
+### Project Structure
+
+```
+addons/mixer/           # Main addon package
+docs/                   # Sphinx documentation
+tests/                  # Comprehensive test suite
+  ├── blender/          # Blender-specific tests
+  ├── broadcaster/      # Networking server/client tests
+  └── conftest.py       # Pytest configuration
+```
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Run tests with: `PYTHONPATH="$(pwd)/addons:$(pwd)" uv run pytest`
+4. Ensure all linting passes: `uv run ruff check addons/mixer tests extra`
+5. Submit a pull request
 
 ## License and Copyright
 

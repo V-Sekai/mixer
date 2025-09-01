@@ -236,14 +236,9 @@ class PythonProcess(Process):
 
     def __init__(self):
         super().__init__()
-        blender_exe = 'blender'
-        python_exe_name = "python3"
-        python_paths = [python_exe_name]
-        if len(python_paths) == 0:
-            raise RuntimeError(
-                f"Expected one {python_exe_name} from Blender at {blender_exe}, found {len(python_paths)} : {python_paths}. Configure MIXER_BLENDER_EXE_PATH"
-            )
-        self._python_path = str(python_paths[0])
+        # Use the same Python interpreter as the parent process
+        import sys
+        self._python_path = sys.executable
         logger.info(f"Using python : {self._python_path}")
 
     def start(self, args: Optional[Iterable[Any]] = ()) -> str:
@@ -255,10 +250,20 @@ class PythonProcess(Process):
         popen_kwargs = {
             "shell": False,
         }
-        
+
         # Only add this flag if the OS is Windows
         if os.name == 'nt':
             popen_kwargs["creationflags"] = subprocess.CREATE_NEW_CONSOLE
+
+        # Pass PYTHONPATH to subprocess so it can import mixer modules
+        env = os.environ.copy()
+        current_pythonpath = env.get('PYTHONPATH', '')
+        if current_pythonpath:
+            env['PYTHONPATH'] = current_pythonpath + os.pathsep + os.getcwd()
+        else:
+            env['PYTHONPATH'] = os.getcwd()
+
+        popen_kwargs["env"] = env
 
         popen_kwargs.update(_popen_redirect)
 

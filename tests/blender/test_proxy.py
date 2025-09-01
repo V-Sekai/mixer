@@ -1,23 +1,30 @@
 import pytest
 # Create a pytest-compatible wrapper for MixerTestCase
 from tests.mixer_testcase import MixerTestCase as BaseMixerTestCase
+from tests.mixer_testcase import BlenderDesc
 
 
-class MixerTestCaseWrapper:
+class MixerTestCaseWrapper(BaseMixerTestCase):
     """Pytest-compatible wrapper for MixerTestCase"""
 
+    def __init__(self):
+        # Initialize the base class directly
+        super().__init__()
+        # Add pytest-compatible assertion methods
+        self.failureException = AssertionError
+
     def setup_method(self):
-        self._base = BaseMixerTestCase()
-        # Initialize pytest-style setup
-        self.teardown_method()
+        # Call the base setup_method with Blender configurations
+        sender_blendfile = None  # Use default Blender file
+        receiver_blendfile = None  # Use same for receiver
+        sender = BlenderDesc(load_file=sender_blendfile, wait_for_debugger=False)
+        receiver = BlenderDesc(load_file=receiver_blendfile, wait_for_debugger=False)
+        blenderdescs = [sender, receiver]
+        super().setup_method(blenderdescs=blenderdescs, join=True)
 
     def teardown_method(self):
-        # Clean up any existing setup
-        pass
-
-    # Forward all attributes and methods to the base class
-    def __getattr__(self, name):
-        return getattr(self._base, name)
+        # Clean up blender instances
+        super().teardown_method()
 
 
 class TestBpyProxy(MixerTestCaseWrapper):
