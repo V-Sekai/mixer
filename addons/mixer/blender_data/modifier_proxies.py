@@ -49,7 +49,15 @@ class NodesModifierProxy(StructProxy):
     _serialize: Tuple[str, ...] = StructProxy._serialize + ("_inputs",)
 
     _non_inputs = set(("_RNA_UI",))
-    _non_inputs.update(T.NodesModifier.bl_rna.properties.keys())
+
+    # Safely handle NodesModifier compatibility across Blender versions
+    try:
+        if hasattr(T, 'NodesModifier'):
+            _non_inputs.update(T.NodesModifier.bl_rna.properties.keys())
+    except (AttributeError, TypeError):
+        # NodesModifier not available in this Blender version, skip
+        pass
+
     """Identifiers of properties that are not inputs."""
 
     def __init__(self):
