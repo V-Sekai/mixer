@@ -12,6 +12,7 @@ import time
 from typing import Any, Iterable, List, Optional, Tuple
 
 from tests.blender_app import BlenderApp
+from tests.blender_pool import BlenderPool
 from tests.grabber import Grabber, CommandStream
 from tests.process import ServerProcess
 
@@ -53,6 +54,8 @@ class MixerTestCase:
         self.experimental_sync = True
         self.shared_folders: List[List[str]] = []
         """One list of shared_folder folders per Blender"""
+        # Blender pool for instance recycling
+        self._pool = None
 
     @property
     def log_level(self):
@@ -89,34 +92,50 @@ class MixerTestCase:
         join=True,
     ):
         """
-        if a blendfile if not specified, blender will start with its default file.
-        Not recommended) as it is machine dependent
+        Setup test with pooled Blender instances for dramatically faster test execution.
+
+        Blender instances are reused across tests instead of being created/destroyed each time.
         """
         try:
-            python_port = 8081
-            # do not the the default ptvsd port as it will be in use when debugging the TestCase
-            ptvsd_port = 5688
+            # Get or create pool instance (singleton)
+            if self._pool is None:
+                self._pool = BlenderPool.get_instance()
 
             # start a broadcaster server
             self._server_process.start(server_args=server_args)
 
-            # start all the blenders
-            window_width = int(1920 / len(blenderdescs))
+            # Acquire/prepare Blender instances from pool
+            base_port = 8081
+            ptvsd_port = 5688
 
+            # Validate shared_folders configuration
+            if len(self.shared_folders) > 0:
+                if len(self.shared_folders) != len(blenderdescs):
+                    pytest.fail(f"shared_folders length ({len(self.shared_folders)}) != blenderdescs length ({len(blenderdescs)})")
+
+                for i, shared_folders in enumerate(self.shared_folders):
+                    if not isinstance(shared_folders, (list, tuple)):
+                        pytest.fail(f"shared_folder must be a list or tuple, not a {type(shared_folders)}")
+
+            # Acquire pooled Blender instances
             for i, blenderdesc in enumerate(blenderdescs):
-                shared_folders = self.shared_folders[i] if i < len(self.shared_folders) else []
-                if not isinstance(shared_folders, (list, tuple)):
-                    pytest.fail(f"shared_folder must be a list or tuple, not a {type(shared_folders)}")
+                port = base_port + i
 
-                window_x = str(i * window_width)
-                args = ["--window-geometry", window_x, "0", "960", "1080"]
-                if blenderdesc.load_file is not None:
-                    args.append(str(blenderdesc.load_file))
-                blender = BlenderApp(python_port + i, ptvsd_port + i, blenderdesc.wait_for_debugger)
+                # Get Blender instance from pool (instant if already exists)
+                blender = self._pool.acquire_blender(
+                    port=port,
+                    ptvsd_port=ptvsd_port,
+                    blenderdesc=blenderdesc
+                )
+
                 blender.set_log_level(self._log_level)
-                blender.setup(args)
+
+                # Only connect if not already connected (first use or after reset)
                 if join:
                     blender.connect_mixer()
+
+                    # Setup room based on instance role
+                    shared_folders = self.shared_folders[i] if i < len(self.shared_folders) else []
                     if i == 0:
                         blender.create_room(vrtist_protocol=self.vrtist_protocol, shared_folders=shared_folders)
                     else:
@@ -124,8 +143,7 @@ class MixerTestCase:
 
                 self._blenders.append(blender)
 
-            # join_room waits for the room to be joinable before issuing join room, but it
-            # cannot wait for the reception of the room contents
+            # Give room time to settle
             time.sleep(10 * self.latency)
 
             mixer.codec.register()
@@ -134,18 +152,65 @@ class MixerTestCase:
             raise
 
     def teardown_method(self, method):
-        self.shutdown()
+        """
+        Teardown with Blender instance recycling.
+
+        Returns Blender instances to pool for reuse instead of destroying them.
+        """
+        try:
+            # Release Blender instances back to pool for reuse
+            for blender in self._blenders:
+                if self._pool is not None:
+                    try:
+                        self._pool.release_blender(blender)
+                        logger.debug(f"Released Blender instance back to pool")
+                    except Exception as e:
+                        logger.warning(f"Error releasing Blender to pool: {e}")
+                else:
+                    # Fallback: destroy instance if no pool available
+                    try:
+                        blender.quit()
+                        blender.wait()
+                        blender.close()
+                    except Exception:
+                        pass
+        finally:
+            # Clear local references (instances live in pool)
+            self._blenders.clear()
+
+            # Kill server process (not pooled)
+            self._server_process.kill()
+            mixer.codec.unregister()
 
     def shutdown(self):
-        # quit and wait
-        for blender in self._blenders:
-            try:
-                blender.quit()
-                blender.wait()
-                blender.close()
-            except Exception:
-                # always close server
-                pass
+        """
+        Legacy shutdown method - called during exceptions.
+
+        Falls back to destroying instances when pooling isn't available or fails.
+        """
+        # Release instances back to pool if possible
+        if self._pool is not None:
+            for blender in self._blenders:
+                try:
+                    self._pool.release_blender(blender)
+                except Exception:
+                    # Fall back to destruction on error
+                    try:
+                        blender.quit()
+                        blender.wait()
+                        blender.close()
+                    except Exception:
+                        pass
+            self._blenders.clear()
+        else:
+            # Original behavior: destroy all instances
+            for blender in self._blenders:
+                try:
+                    blender.quit()
+                    blender.wait()
+                    blender.close()
+                except Exception:
+                    pass
 
         self._server_process.kill()
         mixer.codec.unregister()
