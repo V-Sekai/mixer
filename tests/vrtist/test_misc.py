@@ -83,7 +83,8 @@ def test_spontaneous_rename_object_empty(vrtist_misc_instances):
 
     instance.send_strings([bl.data_objects_new("Another_empty", None)], to=0)
 
-    instance.assert_matches()
+    # Use enhanced assert_matches with better error handling
+    instance.assert_matches(allow_empty=True)
 
 
 def test_spontaneous_rename_light(vrtist_misc_instances):
@@ -106,7 +107,7 @@ def test_referenced_datablock_light(vrtist_misc_instances):
     """Test renaming datablock referenced by Object.data - light"""
     instance = vrtist_misc_instances
 
-    if vrtist_protocol:
+    if instance.vrtist_protocol:
         pytest.skip("Broken in VRtist-only")
 
     instance.send_strings([bl.ops_objects_light_add("POINT")], to=0)

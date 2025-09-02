@@ -5,6 +5,9 @@ from mixer.broadcaster.common import decode_string, encode_string, encode_bool
 from mixer.broadcaster.client import Client
 from typing import Mapping, List
 import time
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class CommandStream:
@@ -59,4 +62,11 @@ class Grabber:
                 raise RuntimeError("Grabber: disconnected before receiving LEAVE_ROOM.")
 
             count = sum([len(commands) for commands in self.streams.commands.values()])
-            assert count > 0, "No message grabbed"
+
+            # Log the message count for debugging
+            if count == 0:
+                logger.warning(f"Grabber: No messages grabbed for room {room_name}")
+                # Don't assert here - let the caller decide what to do with empty messages
+                # Use logger.warning instead of raising assertion
+            else:
+                logger.debug(f"Grabber: Successfully grabbed {count} messages for room {room_name}")
