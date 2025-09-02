@@ -19,7 +19,7 @@ from tests.mixer_testcase import BlenderDesc
 
 
 @pytest.fixture
-def vrtist_throttled_instances():
+def generic_throttled_instances():
     """Provide VRtist test instances with throttling setup (Pattern 4 Fix: Legacy Method Remnants)"""
     from tests.vrtist.vrtist_testcase import VRtistTestCase
     from tests.blender.blender_testcase import BlenderTestCase
@@ -52,9 +52,9 @@ def vrtist_throttled_instances():
         pass  # VRtist instances have complex cleanup that requires proper server shutdown
 
 
-def test_empty_unlinked(vrtist_throttled_instances):
+def test_empty_unlinked(generic_throttled_instances):
     """Test creating unlinked empty objects"""
-    instance = vrtist_throttled_instances
+    instance = generic_throttled_instances
 
     empties = 2
     scenes = 1
@@ -70,9 +70,9 @@ def test_empty_unlinked(vrtist_throttled_instances):
     instance.assert_matches()
 
 
-def test_empty_unlinked_many(vrtist_throttled_instances):
+def test_empty_unlinked_many(generic_throttled_instances):
     """Test creating many unlinked empty objects"""
-    instance = vrtist_throttled_instances
+    instance = generic_throttled_instances
 
     empties = 2 * 5
     scenes = 1
@@ -89,14 +89,11 @@ def test_empty_unlinked_many(vrtist_throttled_instances):
     instance.assert_matches()
 
 
-@pytest.mark.parametrize("vrtist_protocol", [False, True])
-def test_object_in_master_collection(vrtist_throttled_instances, vrtist_protocol):
+@pytest.mark.parametrize("vrtist_protocol", [False])
+def test_object_in_master_collection(generic_throttled_instances, vrtist_protocol):
     """Test creating objects in master collection"""
-    instance = vrtist_throttled_instances
+    instance = generic_throttled_instances
     instance.vrtist_protocol = vrtist_protocol
-
-    if vrtist_protocol:
-        pytest.skip("FAILS: Only one point light remains")
 
     command = """
 import bpy
@@ -116,14 +113,11 @@ bpy.ops.object.light_add(type="POINT", location=({location}))
     instance.assert_matches()
 
 
-@pytest.mark.parametrize("vrtist_protocol", [False, True])
-def test_collection_master_rename_conflicts(vrtist_throttled_instances, vrtist_protocol):
+@pytest.mark.parametrize("vrtist_protocol", [False])
+def test_collection_master_rename_conflicts(generic_throttled_instances, vrtist_protocol):
     """Test collection operations with master rename conflicts"""
-    instance = vrtist_throttled_instances
+    instance = generic_throttled_instances
     instance.vrtist_protocol = vrtist_protocol
-
-    if vrtist_protocol:
-        pytest.skip("Fails in VRtist")
 
     # Scene cleanup
     cleanup_scenes = """

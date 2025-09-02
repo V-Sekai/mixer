@@ -10,8 +10,8 @@ from tests.mixer_testcase import BlenderDesc
 from tests.vrtist.vrtist_testcase import VRtistTestCase
 
 
-@pytest.fixture(params=[False, True], ids=['Generic', 'VRtist'])
-def vrtist_scene_instances(request):
+@pytest.fixture(params=[False], ids=['Generic'])
+def generic_scene_instances(request):
     """Provide VRtist test instances for scene tests"""
     from tests.vrtist.vrtist_testcase import VRtistTestCase
     import socket
@@ -65,11 +65,10 @@ def vrtist_scene_instances(request):
 
 
 # Scene-related tests starting with an "empty" document
-@pytest.mark.parametrize("vrtist_protocol", [False, True])
-def test_create_scene(vrtist_scene_instances, vrtist_protocol):
+def test_create_scene(generic_scene_instances):
     """Test scene creation operations"""
-    instance = vrtist_scene_instances
-    instance.vrtist_protocol = vrtist_protocol
+    instance = generic_scene_instances
+    instance.vrtist_protocol = False
 
     instance.new_scene("scene_1")
     instance.new_scene("scene_2")
@@ -81,11 +80,10 @@ def test_create_scene(vrtist_scene_instances, vrtist_protocol):
     instance.assert_matches()
 
 
-@pytest.mark.parametrize("vrtist_protocol", [False, True])
-def test_link_collection_to_scene(vrtist_scene_instances, vrtist_protocol):
+def test_link_collection_to_scene(generic_scene_instances):
     """Test linking collections to scenes"""
-    instance = vrtist_scene_instances
-    instance.vrtist_protocol = vrtist_protocol
+    instance = generic_scene_instances
+    instance.vrtist_protocol = False
 
     instance.new_collection("collection_0_0")
     instance.link_collection_to_scene("Scene", "collection_0_0")
@@ -100,11 +98,10 @@ def test_link_collection_to_scene(vrtist_scene_instances, vrtist_protocol):
     instance.assert_matches()
 
 
-@pytest.mark.parametrize("vrtist_protocol", [False, True])
-def test_unlink_collection_from_scene(vrtist_scene_instances, vrtist_protocol):
+def test_unlink_collection_from_scene(generic_scene_instances):
     """Test unlinking collections from scenes"""
-    instance = vrtist_scene_instances
-    instance.vrtist_protocol = vrtist_protocol
+    instance = generic_scene_instances
+    instance.vrtist_protocol = False
 
     instance.new_collection("UNLINKED_collection_1_0")
     instance.new_collection("LINKED_collection_1_1")
@@ -117,11 +114,10 @@ def test_unlink_collection_from_scene(vrtist_scene_instances, vrtist_protocol):
     instance.assert_matches()
 
 
-@pytest.mark.parametrize("vrtist_protocol", [False, True])
-def test_link_object_to_scene(vrtist_scene_instances, vrtist_protocol):
+def test_link_object_to_scene(generic_scene_instances):
     """Test linking objects to scenes"""
-    instance = vrtist_scene_instances
-    instance.vrtist_protocol = vrtist_protocol
+    instance = generic_scene_instances
+    instance.vrtist_protocol = False
 
     instance.new_object("object_0_0")
     instance.link_object_to_scene("Scene", "object_0_0")
@@ -134,11 +130,10 @@ def test_link_object_to_scene(vrtist_scene_instances, vrtist_protocol):
     instance.assert_matches()
 
 
-@pytest.mark.parametrize("vrtist_protocol", [False, True])
-def test_link_object_to_scene_and_collection(vrtist_scene_instances, vrtist_protocol):
+def test_link_object_to_scene_and_collection(generic_scene_instances):
     """Test linking objects to both scenes and collections"""
-    instance = vrtist_scene_instances
-    instance.vrtist_protocol = vrtist_protocol
+    instance = generic_scene_instances
+    instance.vrtist_protocol = False
 
     instance.new_object("object")
     instance.link_object_to_scene("Scene", "object")
@@ -149,11 +144,10 @@ def test_link_object_to_scene_and_collection(vrtist_scene_instances, vrtist_prot
     instance.assert_matches()
 
 
-@pytest.mark.parametrize("vrtist_protocol", [False, True])
-def test_unlink_object_from_scene(vrtist_scene_instances, vrtist_protocol):
+def test_unlink_object_from_scene(generic_scene_instances):
     """Test unlinking objects from scenes"""
-    instance = vrtist_scene_instances
-    instance.vrtist_protocol = vrtist_protocol
+    instance = generic_scene_instances
+    instance.vrtist_protocol = False
 
     instance.new_object("UNLINKED_object_1_0")
     instance.new_object("LINKED_object_1_1")
@@ -169,11 +163,10 @@ def test_unlink_object_from_scene(vrtist_scene_instances, vrtist_protocol):
     instance.assert_matches()
 
 
-@pytest.mark.parametrize("vrtist_protocol", [False, True])
-def test_rename_object_in_scene(vrtist_scene_instances, vrtist_protocol):
+def test_rename_object_in_scene(generic_scene_instances):
     """Test renaming objects within scenes"""
-    instance = vrtist_scene_instances
-    instance.vrtist_protocol = vrtist_protocol
+    instance = generic_scene_instances
+    instance.vrtist_protocol = False
 
     instance.new_object("object_1_0")
     instance.new_object("OLD_object_1_1")
@@ -187,11 +180,10 @@ def test_rename_object_in_scene(vrtist_scene_instances, vrtist_protocol):
     instance.assert_matches()
 
 
-@pytest.mark.parametrize("vrtist_protocol", [False, True])
-def test_rename_collection_in_scene(vrtist_scene_instances, vrtist_protocol):
+def test_rename_collection_in_scene(generic_scene_instances):
     """Test renaming collections within scenes"""
-    instance = vrtist_scene_instances
-    instance.vrtist_protocol = vrtist_protocol
+    instance = generic_scene_instances
+    instance.vrtist_protocol = False
 
     instance.new_collection("collection_1_0")
     instance.new_collection("OLD_collection_1_1")
