@@ -12,8 +12,8 @@ from tests.mixer_testcase import BlenderDesc
 from tests import blender_snippets as bl
 
 
-@pytest.fixture(params=[False], ids=['Generic'])
-def generic_misc_instances(request):
+@pytest.fixture(params=[False, True], ids=['Generic', 'VRtist'])
+def vrtist_misc_instances(request):
     """Provide VRtist test instances for misc tests (Pattern 4 Fix: Legacy Method Remnants)"""
     from tests.vrtist.vrtist_testcase import VRtistTestCase
     import socket
@@ -69,9 +69,9 @@ def generic_misc_instances(request):
 
 
 # Tests for spontaneous renaming operations (fixture handles parameterization)
-def test_spontaneous_rename_object_empty(generic_misc_instances):
+def test_spontaneous_rename_object_empty(vrtist_misc_instances):
     """Test spontaneous renaming with empty objects"""
-    instance = generic_misc_instances
+    instance = vrtist_misc_instances
     # vrtist_protocol is now set in the fixture based on the parameterization
 
     instance.send_strings([bl.data_objects_new("Empty", None), bl.data_objects_new("Empty", None)], to=0)
@@ -87,9 +87,9 @@ def test_spontaneous_rename_object_empty(generic_misc_instances):
     instance.assert_matches(allow_empty=True)
 
 
-def test_spontaneous_rename_light(generic_misc_instances):
+def test_spontaneous_rename_light(vrtist_misc_instances):
     """Test spontaneous renaming with light objects"""
-    instance = generic_misc_instances
+    instance = vrtist_misc_instances
     if instance.vrtist_protocol:
         import pytest
         pytest.skip("FAILS in VRtist mode")
@@ -103,9 +103,9 @@ def test_spontaneous_rename_light(generic_misc_instances):
     instance.assert_matches()
 
 
-def test_referenced_datablock_light(generic_misc_instances):
+def test_referenced_datablock_light(vrtist_misc_instances):
     """Test renaming datablock referenced by Object.data - light"""
-    instance = generic_misc_instances
+    instance = vrtist_misc_instances
 
     if instance.vrtist_protocol:
         pytest.skip("Broken in VRtist-only")
@@ -117,12 +117,13 @@ def test_referenced_datablock_light(generic_misc_instances):
     instance.assert_matches()
 
 
-def test_referenced_datablock_material(generic_misc_instances):
+@pytest.mark.parametrize("vrtist_protocol", [False, True])
+def test_referenced_datablock_material(vrtist_misc_instances, vrtist_protocol):
     """Test renaming datablock referenced by Object.data - material"""
-    instance = generic_misc_instances
-    instance.vrtist_protocol = False
+    instance = vrtist_misc_instances
+    instance.vrtist_protocol = vrtist_protocol
 
-    if False:  # Never skip for Generic-only
+    if vrtist_protocol:
         pytest.skip("Broken in VRtist-only")
 
     instance.ignored_messages |= {MessageType.MATERIAL, MessageType.OBJECT_VISIBILITY}
@@ -138,10 +139,11 @@ obj.active_material = mat
     instance.assert_matches()
 
 
-def test_unresolved_ref_in_bpy_prop_collection(generic_misc_instances):
+@pytest.mark.parametrize("vrtist_protocol", [False, True])
+def test_unresolved_ref_in_bpy_prop_collection(vrtist_misc_instances, vrtist_protocol):
     """Test unresolved references stored in bpy_prop_collection"""
-    instance = generic_misc_instances
-    instance.vrtist_protocol = False
+    instance = vrtist_misc_instances
+    instance.vrtist_protocol = vrtist_protocol
 
     instance.ignored_messages |= {MessageType.MATERIAL, MessageType.OBJECT_VISIBILITY}
 
@@ -157,12 +159,13 @@ b.children.link(c)
     instance.assert_matches()
 
 
-def test_rename_datablock_light(generic_misc_instances):
+@pytest.mark.parametrize("vrtist_protocol", [False])
+def test_rename_datablock_light(vrtist_misc_instances, vrtist_protocol):
     """Test renaming datablock referenced by Object.data - light (only Generic mode)"""
-    instance = generic_misc_instances
-    instance.vrtist_protocol = False
+    instance = vrtist_misc_instances
+    instance.vrtist_protocol = vrtist_protocol
 
-    if False:  # Never skip for Generic-only
+    if vrtist_protocol:
         pytest.skip("Broken in VRtist-only")
 
     instance.send_strings([bl.ops_objects_light_add("POINT")], to=0)
@@ -172,10 +175,11 @@ def test_rename_datablock_light(generic_misc_instances):
     instance.assert_matches()
 
 
-def test_object_parent(generic_misc_instances):
+@pytest.mark.parametrize("vrtist_protocol", [False, True])
+def test_object_parent(vrtist_misc_instances, vrtist_protocol):
     """Test object parenting regardless of creation order"""
-    instance = generic_misc_instances
-    instance.vrtist_protocol = False
+    instance = vrtist_misc_instances
+    instance.vrtist_protocol = vrtist_protocol
 
     create = """
 import bpy
@@ -193,10 +197,11 @@ obj0.parent = obj1
     instance.assert_matches()
 
 
-def test_collection_children(generic_misc_instances):
+@pytest.mark.parametrize("vrtist_protocol", [False, True])
+def test_collection_children(vrtist_misc_instances, vrtist_protocol):
     """Test collection children creation and linking"""
-    instance = generic_misc_instances
-    instance.vrtist_protocol = False
+    instance = vrtist_misc_instances
+    instance.vrtist_protocol = vrtist_protocol
 
     create = """
 import bpy
@@ -212,10 +217,11 @@ coll0.children.link(coll2)
     instance.assert_matches()
 
 
-def test_set_datablock_ref_from_none(generic_misc_instances):
+@pytest.mark.parametrize("vrtist_protocol", [False, True])
+def test_set_datablock_ref_from_none(vrtist_misc_instances, vrtist_protocol):
     """Test setting datablock reference from None"""
-    instance = generic_misc_instances
-    instance.vrtist_protocol = False
+    instance = vrtist_misc_instances
+    instance.vrtist_protocol = vrtist_protocol
 
     create = """
 import bpy
@@ -238,12 +244,13 @@ obj0.parent = obj1
     instance.assert_matches()
 
 
-def test_set_datablock_ref_to_none(generic_misc_instances):
+@pytest.mark.parametrize("vrtist_protocol", [False, True])
+def test_set_datablock_ref_to_none(vrtist_misc_instances, vrtist_protocol):
     """Test setting datablock reference to None"""
-    instance = generic_misc_instances
-    instance.vrtist_protocol = False
+    instance = vrtist_misc_instances
+    instance.vrtist_protocol = vrtist_protocol
 
-    if False:  # Never skip for Generic-only
+    if vrtist_protocol:
         pytest.skip("Broken in VRtist-only")
 
     create = """

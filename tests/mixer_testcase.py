@@ -16,7 +16,7 @@ from tests.blender_pool import BlenderPool
 from tests.grabber import Grabber, CommandStream
 from tests.process import ServerProcess
 
-from mixer.blender_data import codec
+import mixer.codec
 from mixer.broadcaster.common import Command, MessageType
 from mixer.blender_data.types import Soa
 

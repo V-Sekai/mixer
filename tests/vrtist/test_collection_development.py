@@ -22,8 +22,8 @@ from tests.mixer_testcase import BlenderDesc
 from tests import files_folder
 
 
-@pytest.fixture(params=[False], ids=['Generic'])
-def generic_instances(request):
+@pytest.fixture(params=[False, True], ids=['Generic', 'VRtist'])
+def vrtist_instances(request):
     """Development fixture for testing collection sync in both protocols"""
 
     # Use single protocol for focused testing
@@ -95,7 +95,7 @@ def generic_instances(request):
         gc.collect()
 
 
-def test_nested_collections(generic_instances):
+def test_nested_collections(vrtist_instances):
     """
     DEVELOPEMENT TEST: Nested collection creation synchronization
 
@@ -111,7 +111,7 @@ def test_nested_collections(generic_instances):
     5. Assert synchronization worked
     """
 
-    instance = generic_instances
+    instance = vrtist_instances
 
     protocol_name = "GENERIC" if instance.vrtist_protocol else "VRtist"
     print(f"\n🏗️ Running collection test for protocol: {protocol_name}"

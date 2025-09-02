@@ -7,8 +7,8 @@ from tests import files_folder
 from tests.mixer_testcase import BlenderDesc
 
 
-@pytest.fixture(params=[False], ids=['Generic'])
-def generic_instances(request):
+@pytest.fixture(params=[False, True], ids=['Generic', 'VRtist'])
+def vrtist_instances(request):
     """Provide VRtist test instances with basic Blender setup"""
     from tests.vrtist.vrtist_testcase import VRtistTestCase
     from tests.blender.blender_testcase import BlenderTestCase
@@ -62,9 +62,9 @@ def generic_instances(request):
         gc.collect()
 
 
-def test_nested_collections(generic_instances):
+def test_nested_collections(vrtist_instances):
     """Test creating nested collection hierarchies"""
-    instance = generic_instances
+    instance = vrtist_instances
 
     instance.new_collection("plop")
     instance.link_collection_to_collection("Collection", "plop")
@@ -77,9 +77,9 @@ def test_nested_collections(generic_instances):
     instance.assert_matches()
 
 
-def test_collection_linked_twice(generic_instances):
+def test_collection_linked_twice(vrtist_instances):
     """Test collection linked to multiple parent collections"""
-    instance = generic_instances
+    instance = vrtist_instances
 
     instance.new_collection("C1")
     instance.new_collection("C2")
@@ -91,9 +91,9 @@ def test_collection_linked_twice(generic_instances):
     instance.assert_matches()
 
 
-def test_collection_different_order(generic_instances):
+def test_collection_different_order(vrtist_instances):
     """Test collection creation in different order (regression test)"""
-    instance = generic_instances
+    instance = vrtist_instances
 
     instance.new_collection("plop")
     instance.link_collection_to_collection("Collection", "plop")
@@ -108,9 +108,9 @@ def test_collection_different_order(generic_instances):
     instance.assert_matches()
 
 
-def test_collection_name_clash(generic_instances):
+def test_collection_name_clash(vrtist_instances):
     """Test collection creation with name conflicts"""
-    instance = generic_instances
+    instance = vrtist_instances
 
     instance.create_collection_in_collection("Collection", "plop")
     instance.create_collection_in_collection("Collection", "Collection")
@@ -118,9 +118,9 @@ def test_collection_name_clash(generic_instances):
     instance.assert_matches()
 
 
-def test_collection_objects(generic_instances):
+def test_collection_objects(vrtist_instances):
     """Test creating objects within collections"""
-    instance = generic_instances
+    instance = vrtist_instances
 
     instance.create_object_in_collection("Collection", "new_object_0_0")
     instance.create_object_in_collection("Collection", "new_object_0_1")
@@ -129,9 +129,9 @@ def test_collection_objects(generic_instances):
     instance.assert_matches()
 
 
-def test_object_linked_to_collections(generic_instances):
+def test_object_linked_to_collections(vrtist_instances):
     """Test object linked to multiple collections"""
-    instance = generic_instances
+    instance = vrtist_instances
 
     instance.new_collection("C1")
     instance.new_collection("C2")
@@ -144,9 +144,9 @@ def test_object_linked_to_collections(generic_instances):
     instance.assert_matches()
 
 
-def test_unlink_objects_from_collection(generic_instances):
+def test_unlink_objects_from_collection(vrtist_instances):
     """Test removing objects from collections"""
-    instance = generic_instances
+    instance = vrtist_instances
 
     instance.create_collection_in_collection("Collection", "sub_collection_1")
     instance.create_object_in_collection("Collection", "new_object_0_0")
@@ -161,9 +161,9 @@ def test_unlink_objects_from_collection(generic_instances):
     instance.assert_matches()
 
 
-def test_unlink_collections_from_collection(generic_instances):
+def test_unlink_collections_from_collection(vrtist_instances):
     """Test removing collections from parent collections"""
-    instance = generic_instances
+    instance = vrtist_instances
 
     instance.create_collection_in_collection("Collection", "plaf0")
     instance.create_collection_in_collection("Collection", "plaf1")
@@ -178,9 +178,9 @@ def test_unlink_collections_from_collection(generic_instances):
     instance.assert_matches()
 
 
-def test_collection_instances_after_join(generic_instances):
+def test_collection_instances_after_join(vrtist_instances):
     """Test creating collection instances after joining"""
-    instance = generic_instances
+    instance = vrtist_instances
 
     instance.create_collection_in_collection("Collection", "src")
     instance.create_object_in_collection("src", "new_object_0_0")
@@ -193,9 +193,9 @@ def test_collection_instances_after_join(generic_instances):
 
 
 @pytest.mark.skip(reason="Timing problem - instances before join")
-def test_collection_instances_before_join(generic_instances):
+def test_collection_instances_before_join(vrtist_instances):
     """Test creating collection instances before joining - has timing issues"""
-    instance = generic_instances
+    instance = vrtist_instances
 
     # Disconnect and reconnect to test pre-join instance creation
     instance._sender.disconnect_mixer()
@@ -214,9 +214,9 @@ def test_collection_instances_before_join(generic_instances):
     instance.assert_matches()
 
 
-def test_collection_rename(generic_instances):
+def test_collection_rename(vrtist_instances):
     """Test renaming collections and their contents"""
-    instance = generic_instances
+    instance = vrtist_instances
 
     instance.create_collection_in_collection("Collection", "old_name")
     instance.create_object_in_collection("old_name", "object_0")
@@ -232,8 +232,8 @@ def test_collection_rename(generic_instances):
 
 
 # Tests starting from empty Blend files
-@pytest.fixture(params=[False], ids=['Generic'])
-def generic_empty_instances(request):
+@pytest.fixture(params=[False, True], ids=['Generic', 'VRtist'])
+def vrtist_empty_instances(request):
     """Provide VRtist test instances with empty Blender setup"""
     from tests.vrtist.vrtist_testcase import VRtistTestCase
     import socket
@@ -286,9 +286,9 @@ def generic_empty_instances(request):
         gc.collect()
 
 
-def test_collection_rename_empty(generic_empty_instances):
+def test_collection_rename_empty(vrtist_empty_instances):
     """Test collection renaming with depsgraph updates (empty file start)"""
-    instance = generic_empty_instances
+    instance = vrtist_empty_instances
 
     # need to be linked to master collection in order to get depsgraph updates
     s = """
@@ -311,9 +311,9 @@ c1.name = "c1_updated"
     instance.assert_matches()
 
 
-def test_rename_unlink_object_empty(generic_empty_instances):
+def test_rename_unlink_object_empty(vrtist_empty_instances):
     """Test renaming collection and unlinking object"""
-    instance = generic_empty_instances
+    instance = vrtist_empty_instances
 
     s = """
 import bpy
@@ -340,9 +340,9 @@ c1.objects.unlink(obj)
     instance.assert_matches()
 
 
-def test_rename_unlink_object_nested_empty(generic_empty_instances):
+def test_rename_unlink_object_nested_empty(vrtist_empty_instances):
     """Test renaming nested collection and unlinking object"""
-    instance = generic_empty_instances
+    instance = vrtist_empty_instances
 
     s = """
 import bpy
@@ -369,9 +369,9 @@ c2.objects.unlink(obj)
     instance.assert_matches()
 
 
-def test_collection_unlink_empty(generic_empty_instances):
+def test_collection_unlink_empty(vrtist_empty_instances):
     """Test nested collection operations (empty setup)"""
-    instance = generic_empty_instances
+    instance = vrtist_empty_instances
 
     s = """
 import bpy
@@ -392,9 +392,9 @@ c2.name = "c2_updated"
     instance.send_string(s)
 
 
-def test_complex_collection_operations_empty(generic_empty_instances):
+def test_complex_collection_operations_empty(vrtist_empty_instances):
     """Test complex collection and object operations"""
-    instance = generic_empty_instances
+    instance = vrtist_empty_instances
 
     s = """
 import bpy

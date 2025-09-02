@@ -119,7 +119,7 @@ class PytestCollector:
         phases = [
             ("BLENDER", ["--collect-only", "tests/blender/", "--tb=short"],
              "Testing Blender-specific tests"),
-            ("VRTEST", ["--collect-only", "tests/generic/", "--tb=short"],
+            ("VRTEST", ["--collect-only", "tests/vrtist/", "--tb=short"],
              "Testing VRtist tests"),
             ("FULL", ["--collect-only", "--tb=short"],
              "Full test collection"),
