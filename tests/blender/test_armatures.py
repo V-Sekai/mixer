@@ -1,11 +1,17 @@
-import unittest
+import pytest
 
 from tests import files_folder
-from tests.blender.blender_testcase import BlenderTestCase
+from tests.conftest import BlenderTestMixin, TestAssertionsMixin
 from tests.mixer_testcase import BlenderDesc
 
 
-class TestCase(BlenderTestCase):
+class TestCase(BlenderTestMixin, TestAssertionsMixin):
+    @pytest.fixture(autouse=True)
+    def setup_testcase(self, tmp_path, blender_empty_blend):
+        """Pytest fixture for setup that runs automatically"""
+        self.tmp_path = tmp_path
+        self.blender_empty_blend = blender_empty_blend
+        self.setup_blender_instances()
     def setUp(self):
         sender_blendfile = files_folder() / "empty.blend"
         receiver_blendfile = files_folder() / "empty.blend"
@@ -95,7 +101,3 @@ bpy.ops.object.editmode_toggle(view_3d_context())
         command = override_context + create
         self.send_string(command, sleep=1)
         self.end_test()
-
-
-if __name__ == "__main__":
-    unittest.main()

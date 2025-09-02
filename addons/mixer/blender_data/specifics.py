@@ -480,13 +480,7 @@ def _(bpy_struct: T.Struct, properties: ItemsView) -> ItemsView:
     return _filter_properties(properties, filter_props)
 
 
-@conditional_properties.register(T.EffectSequence)  # type: ignore[no-redef]
-@conditional_properties.register(T.ImageSequence)
-@conditional_properties.register(T.MaskSequence)
-@conditional_properties.register(T.MetaSequence)
-@conditional_properties.register(T.MovieClipSequence)
-@conditional_properties.register(T.MovieSequence)
-@conditional_properties.register(T.SceneSequence)
+
 def _(bpy_struct: T.Struct, properties: ItemsView) -> ItemsView:
     if bpy.app.version >= (2, 92, 0):
         return properties
@@ -500,6 +494,40 @@ def _(bpy_struct: T.Struct, properties: ItemsView) -> ItemsView:
         return properties
 
     return _filter_properties(properties, filter_props)
+
+
+# Register sequence types conditionally if they exist (compatibility with different Blender versions)
+
+# Check if various sequence types exist and register them
+sequence_types_to_register = [
+    'EffectSequence', 'ImageSequence', 'MaskSequence', 'MetaSequence',
+    'MovieClipSequence', 'MovieSequence', 'SceneSequence'
+]
+
+for seq_type in sequence_types_to_register:
+    try:
+        if hasattr(T, seq_type):
+            seq_class = getattr(T, seq_type)
+            @conditional_properties.register(seq_class)  # type: ignore[no-redef]
+            def _(bpy_struct: T.Struct, properties: ItemsView, filter_props=[]) -> ItemsView:
+                if bpy.app.version >= (2, 92, 0):
+                    return properties
+                local_filter = []
+                if not bpy_struct.use_crop:
+                    local_filter.append("crop")
+                if not bpy_struct.use_translation:
+                    local_filter.append("transform")
+
+                if not local_filter:
+                    return properties
+
+                return _filter_properties(properties, local_filter)
+        else:
+            # Sequence type doesn't exist in this Blender version, skip registration
+            pass
+    except AttributeError:
+        # Handle case where sequence type registration fails
+        pass
 
 
 _morphable_types = (T.Light, T.Texture)
@@ -626,18 +654,12 @@ def _(collection: T.bpy_prop_collection, proxy: Proxy, index: int, context: Cont
     return collection.new(socket_type, name)
 
 
-@add_element.register(T.NodeTreeInputs)  # type: ignore[no-redef]
-@add_element.register(T.NodeTreeOutputs)  # type: ignore[no-redef]
-def _(collection: T.bpy_prop_collection, proxy: Proxy, index: int, context: Context) -> T.bpy_struct:
-    socket_type = proxy.data("bl_socket_idname")
-    name = proxy.data("name")
-    return collection.new(socket_type, name)
 
 
-@add_element.register(T.ObjectGpencilModifiers)  # type: ignore[no-redef]
-@add_element.register(T.ObjectModifiers)
-@add_element.register(T.ObjectShaderFx)  # type: ignore[no-redef]
-@add_element.register(T.SequenceModifiers)  # type: ignore[no-redef]
+
+
+
+
 def _(collection: T.bpy_prop_collection, proxy: Proxy, index: int, context: Context) -> T.bpy_struct:
     name = proxy.data("name")
     type_ = proxy.data("type")
@@ -683,8 +705,7 @@ def _(collection: T.bpy_prop_collection, proxy: Proxy, index: int, context: Cont
         raise AddElementFailed from None
 
 
-@add_element.register(T.ActionGroups)  # type: ignore[no-redef]
-@add_element.register(T.FaceMaps)
+
 @add_element.register(T.LoopColors)
 @add_element.register(T.TimelineMarkers)
 @add_element.register(T.UVLoopLayers)
@@ -751,7 +772,7 @@ def _(collection: T.bpy_prop_collection, proxy: Proxy, index: int, context: Cont
     return collection.add(1)
 
 
-@add_element.register(T.AttributeGroup)  # type: ignore[no-redef]
+
 def _(collection: T.bpy_prop_collection, proxy: Proxy, index: int, context: Context) -> T.bpy_struct:
     name = proxy.data("name")
     type_ = proxy.data("type")
@@ -775,41 +796,48 @@ def _version():
     return version
 
 
-if _version() < (2, 92, 0):
+# Conditional sequences import for version compatibility
+if _version() >= (2, 92, 0) and hasattr(T, 'SequencesTopLevel'):
+    _Sequences = T.SequencesTopLevel
+elif hasattr(T, 'Sequences'):
     _Sequences = T.Sequences
 else:
-    _Sequences = T.SequencesTopLevel
+    # Fallback for versions without this type (shouldn't happen but prevent crashes)
+    logger.warning("Sequences or SequencesTopLevel not found in this Blender version")
+    _Sequences = None
 
 
-@add_element.register(_Sequences)  # type: ignore[no-redef]
-def _(collection: T.bpy_prop_collection, proxy: Proxy, index: int, context: Context) -> T.bpy_struct:
-    type_name = proxy.data("type")
-    name = proxy.data("name")
-    channel = proxy.data("channel")
-    frame_start = proxy.data("frame_start")
-    if type_name in _effect_sequences():
-        # overwritten anyway
-        frame_end = frame_start + 1
-        return collection.new_effect(name, type_name, channel, frame_start, frame_end=frame_end)
-    if type_name == "SOUND":
-        sound = proxy.data("sound")
-        target = sound.target(context)
-        if not target:
-            logger.warning(f"missing target ID block for bpy.data.{sound.collection}[{sound.key}] ")
-            return None
-        filepath = target.filepath
-        return collection.new_sound(name, filepath, channel, frame_start)
-    if type_name == "MOVIE":
-        filepath = proxy.data("filepath")
-        return collection.new_movie(name, filepath, channel, frame_start)
-    if type_name == "IMAGE":
-        directory = proxy.data("directory")
-        filename = proxy.data("elements").data(0).data("filename")
-        filepath = str(Path(directory) / filename)
-        return collection.new_image(name, filepath, channel, frame_start)
+# Register sequences handler conditionally based on available type
+if _Sequences is not None:
+    @add_element.register(_Sequences)  # type: ignore[no-redef]
+    def _(collection: T.bpy_prop_collection, proxy: Proxy, index: int, context: Context) -> T.bpy_struct:
+        type_name = proxy.data("type")
+        name = proxy.data("name")
+        channel = proxy.data("channel")
+        frame_start = proxy.data("frame_start")
+        if type_name in _effect_sequences():
+            # overwritten anyway
+            frame_end = frame_start + 1
+            return collection.new_effect(name, type_name, channel, frame_start, frame_end=frame_end)
+        if type_name == "SOUND":
+            sound = proxy.data("sound")
+            target = sound.target(context)
+            if not target:
+                logger.warning(f"missing target ID block for bpy.data.{sound.collection}[{sound.key}] ")
+                return None
+            filepath = target.filepath
+            return collection.new_sound(name, filepath, channel, frame_start)
+        if type_name == "MOVIE":
+            filepath = proxy.data("filepath")
+            return collection.new_movie(name, filepath, channel, frame_start)
+        if type_name == "IMAGE":
+            directory = proxy.data("directory")
+            filename = proxy.data("elements").data(0).data("filename")
+            filepath = str(Path(directory) / filename)
+            return collection.new_image(name, filepath, channel, frame_start)
 
-    logger.warning(f"Sequence type not implemented: {type_name}")
-    return None
+        logger.warning(f"Sequence type not implemented: {type_name}")
+        return None
 
 
 @add_element.register(T.IDMaterials)  # type: ignore[no-redef]
@@ -1027,15 +1055,41 @@ def clear_from(collection: T.bpy_prop_collection, sequence: List[DatablockProxy]
     return min(len(sequence), len(collection))
 
 
-@clear_from.register(T.ObjectModifiers)  # type: ignore[no-redef]
-@clear_from.register(T.ObjectGpencilModifiers)
-@clear_from.register(T.SequenceModifiers)  # type: ignore[no-redef]
-def _(collection: T.bpy_prop_collection, sequence: List[DatablockProxy], context: Context) -> int:
-    """clear_from implementation for collections of items that cannot be updated if their "type" attribute changes."""
-    for i, (proxy, item) in enumerate(zip(sequence, collection)):
-        if proxy.data("type") != item.type:
-            return i
-    return min(len(sequence), len(collection))
+# Register modifier collections conditionally based on availability
+def _register_modifier_clear_from_handlers():
+    """Conditionally register clear_from handlers for modifier types that exist."""
+
+    # Always register ObjectModifiers if it exists
+    if hasattr(T, 'ObjectModifiers'):
+        @clear_from.register(T.ObjectModifiers)  # type: ignore[no-redef]
+        def _(collection: T.bpy_prop_collection, sequence: List[DatablockProxy], context: Context) -> int:
+            """clear_from implementation for collections of items that cannot be updated if their "type" attribute changes."""
+            for i, (proxy, item) in enumerate(zip(sequence, collection)):
+                if proxy.data("type") != item.type:
+                    return i
+            return min(len(sequence), len(collection))
+
+    # Conditionally register ObjectGpencilModifiers
+    if hasattr(T, 'ObjectGpencilModifiers'):
+        @clear_from.register(T.ObjectGpencilModifiers)
+        def _(collection: T.bpy_prop_collection, sequence: List[DatablockProxy], context: Context) -> int:
+            """clear_from implementation for collections of items that cannot be updated if their "type" attribute changes."""
+            for i, (proxy, item) in enumerate(zip(sequence, collection)):
+                if proxy.data("type") != item.type:
+                    return i
+            return min(len(sequence), len(collection))
+
+    # Conditionally register SequenceModifiers
+    if hasattr(T, 'SequenceModifiers'):
+        @clear_from.register(T.SequenceModifiers)  # type: ignore[no-redef]
+        def _(collection: T.bpy_prop_collection, sequence: List[DatablockProxy], context: Context) -> int:
+            """clear_from implementation for collections of items that cannot be updated if their "type" attribute changes."""
+            for i, (proxy, item) in enumerate(zip(sequence, collection)):
+                if proxy.data("type") != item.type:
+                    return i
+            return min(len(sequence), len(collection))
+
+_register_modifier_clear_from_handlers()
 
 
 @clear_from.register(T.Nodes)  # type: ignore[no-redef]

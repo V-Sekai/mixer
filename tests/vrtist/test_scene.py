@@ -1,6 +1,7 @@
-import unittest
-
-from parameterized import parameterized_class
+"""
+VRtist scene tests - converted to natural pytest format
+"""
+import pytest
 
 from mixer.broadcaster.common import MessageType
 
@@ -9,113 +10,202 @@ from tests.mixer_testcase import BlenderDesc
 from tests.vrtist.vrtist_testcase import VRtistTestCase
 
 
-@parameterized_class(
-    [{"vrtist_protocol": False}, {"vrtist_protocol": True}],
-    class_name_func=VRtistTestCase.get_class_name,
-)
-class TestSceneEmptyDoc(VRtistTestCase):
-    """
-    Scene-related tests starting with an "empty" document with a single "Scene"
+@pytest.fixture(params=[False, True], ids=['Generic', 'VRtist'])
+def vrtist_scene_instances(request):
+    """Provide VRtist test instances for scene tests"""
+    from tests.vrtist.vrtist_testcase import VRtistTestCase
+    import socket
 
-    Caveats for collections in generic mode:
-    - collection creation do not trigger a depsgraph update, so VRtistTestCase.flush_collections() does
-    a trick for this
-    - the trick works if the collection is created in the active scene, so call remove_scene() so that
-    the collection are created in the active scene
-    """
+    # Use different server ports to avoid conflicts between parameterized tests
+    base_port = 12900
+    port_offset = 1 if request.param else 0  # Generic gets port_offset 1, VRtist gets 0
 
-    def setUp(self):
+    def find_free_port(base_port, max_attempts=10):
+        for attempt in range(max_attempts):
+            try_port = base_port + attempt
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+                try:
+                    sock.bind(('127.0.0.1', try_port))
+                    sock.close()
+                    return try_port
+                except OSError:
+                    continue
+        raise RuntimeError(f"Could not find free port starting from {base_port}")
+
+    server_port = find_free_port(base_port + port_offset)
+
+    try:
         sender_blendfile = files_folder() / "empty.blend"
         receiver_blendfile = files_folder() / "empty.blend"
-        blenderdescs = [BlenderDesc(load_file=sender_blendfile), BlenderDesc(load_file=receiver_blendfile)]
-        super().setUp(blenderdescs=blenderdescs)
+        sender = BlenderDesc(load_file=sender_blendfile, wait_for_debugger=False)
+        receiver = BlenderDesc(load_file=receiver_blendfile, wait_for_debugger=False)
+        blenderdescs = [sender, receiver]
 
-    def test_create_scene(self):
-        self.new_scene("scene_1")
-        self.new_scene("scene_2")
-        # temporary : create an object since update_post is not called after scene creation
-        self.new_object("object_0_0")
+        # Create VRtist test instance and perform proper Blender setup
+        vrtist_test = VRtistTestCase()
 
-        self.expected_counts = {MessageType.SCENE: 3}
-        self.end_test()
+        # CRITICAL: Perform the Blender setup that initializes _blenders with actual BlenderApp instances
+        vrtist_test.setup_method(None, blenderdescs=blenderdescs, server_args=["--port", str(server_port)])
 
-    def test_link_collection_to_scene(self):
-        self.new_collection("collection_0_0")
-        self.link_collection_to_scene("Scene", "collection_0_0")
-        self.remove_scene("Scene")
-        self.new_collection("collection_1_0")
-        self.new_collection("collection_1_1")
-        self.link_collection_to_scene("Scene", "collection_1_0")
-        self.link_collection_to_scene("Scene", "collection_1_1")
+        # Initialize additional attributes needed for vrtist tests
+        vrtist_test.vrtist_protocol = request.param
+        vrtist_test.ignored_messages = set()
+        vrtist_test.expected_counts = {}
 
-        self.expected_counts = {MessageType.ADD_COLLECTION_TO_SCENE: 3}
-        self.end_test()
+        yield vrtist_test
 
-    def test_unlink_collection_from_scene(self):
-        self.new_collection("UNLINKED_collection_1_0")
-        self.new_collection("LINKED_collection_1_1")
-        self.link_collection_to_scene("Scene", "UNLINKED_collection_1_0")
-        self.link_collection_to_scene("Scene", "LINKED_collection_1_1")
-        self.unlink_collection_from_scene("Scene", "UNLINKED_collection_1_0")
+    except Exception as e:
+        pytest.fail(f"Failed to setup scene test instances: {e}")
+    finally:
+        # Cleanup
+        if hasattr(vrtist_test, 'shutdown'):
+            vrtist_test.shutdown()
+        import gc
+        gc.collect()
 
-        self.expected_counts = {MessageType.ADD_COLLECTION_TO_SCENE: 1}
-        self.end_test()
 
-    def test_link_object_to_scene(self):
-        self.new_object("object_0_0")
-        self.link_object_to_scene("Scene", "object_0_0")
-        self.new_object("object_1_0")
-        self.new_object("object_1_1")
-        self.link_object_to_scene("Scene", "object_1_0")
-        self.link_object_to_scene("Scene", "object_1_1")
-        self.expected_counts = {MessageType.ADD_OBJECT_TO_SCENE: 3}
-        self.end_test()
+# Scene-related tests starting with an "empty" document
+@pytest.mark.parametrize("vrtist_protocol", [False, True])
+def test_create_scene(vrtist_scene_instances, vrtist_protocol):
+    """Test scene creation operations"""
+    instance = vrtist_scene_instances
+    instance.vrtist_protocol = vrtist_protocol
 
-    def test_link_object_to_scene_and_collection(self):
-        self.new_object("object")
-        self.link_object_to_scene("Scene", "object")
-        self.new_collection("collection")
-        self.link_collection_to_scene("Scene", "collection")
-        self.link_object_to_collection("collection", "object")
-        self.end_test()
+    instance.new_scene("scene_1")
+    instance.new_scene("scene_2")
+    # temporary : create an object since update_post is not called after scene creation
+    instance.new_object("object_0_0")
 
-    def test_unlink_object_from_scene(self):
-        self.new_object("UNLINKED_object_1_0")
-        self.new_object("LINKED_object_1_1")
+    instance.expected_counts = {MessageType.SCENE: 3}
+    instance.flush_collections()
+    instance.assert_matches()
 
-        self.link_object_to_scene("Scene", "UNLINKED_object_1_0")
-        self.link_object_to_scene("Scene", "LINKED_object_1_1")
-        self.unlink_object_from_scene("Scene", "UNLINKED_object_1_0")
-        self.expected_counts = {
-            MessageType.REMOVE_OBJECT_FROM_SCENE: 0,
-            MessageType.ADD_OBJECT_TO_SCENE: 1,
-        }
-        self.end_test()
 
-    def test_rename_object_in_scene(self):
-        self.new_object("object_1_0")
-        self.new_object("OLD_object_1_1")
+@pytest.mark.parametrize("vrtist_protocol", [False, True])
+def test_link_collection_to_scene(vrtist_scene_instances, vrtist_protocol):
+    """Test linking collections to scenes"""
+    instance = vrtist_scene_instances
+    instance.vrtist_protocol = vrtist_protocol
 
-        self.link_object_to_scene("Scene", "object_1_0")
-        self.link_object_to_scene("Scene", "OLD_object_1_1")
-        self.rename_object("OLD_object_1_1", "NEW_object_1_1")
+    instance.new_collection("collection_0_0")
+    instance.link_collection_to_scene("Scene", "collection_0_0")
+    instance.remove_scene("Scene")
+    instance.new_collection("collection_1_0")
+    instance.new_collection("collection_1_1")
+    instance.link_collection_to_scene("Scene", "collection_1_0")
+    instance.link_collection_to_scene("Scene", "collection_1_1")
 
-        self.expected_counts = {MessageType.ADD_OBJECT_TO_SCENE: 2}
-        self.end_test()
+    instance.expected_counts = {MessageType.ADD_COLLECTION_TO_SCENE: 3}
+    instance.flush_collections()
+    instance.assert_matches()
 
-    def test_rename_collection_in_scene(self):
-        self.new_collection("collection_1_0")
-        self.new_collection("OLD_collection_1_1")
 
-        self.link_collection_to_scene("Scene", "collection_1_0")
-        self.link_collection_to_scene("Scene", "OLD_collection_1_1")
-        self.rename_collection("OLD_collection_1_1", "NEW_collection_1_1")
-        self.expected_counts = {
-            MessageType.ADD_COLLECTION_TO_SCENE: 2,
-        }
+@pytest.mark.parametrize("vrtist_protocol", [False, True])
+def test_unlink_collection_from_scene(vrtist_scene_instances, vrtist_protocol):
+    """Test unlinking collections from scenes"""
+    instance = vrtist_scene_instances
+    instance.vrtist_protocol = vrtist_protocol
 
-        self.end_test()
+    instance.new_collection("UNLINKED_collection_1_0")
+    instance.new_collection("LINKED_collection_1_1")
+    instance.link_collection_to_scene("Scene", "UNLINKED_collection_1_0")
+    instance.link_collection_to_scene("Scene", "LINKED_collection_1_1")
+    instance.unlink_collection_from_scene("Scene", "UNLINKED_collection_1_0")
+
+    instance.expected_counts = {MessageType.ADD_COLLECTION_TO_SCENE: 1}
+    instance.flush_collections()
+    instance.assert_matches()
+
+
+@pytest.mark.parametrize("vrtist_protocol", [False, True])
+def test_link_object_to_scene(vrtist_scene_instances, vrtist_protocol):
+    """Test linking objects to scenes"""
+    instance = vrtist_scene_instances
+    instance.vrtist_protocol = vrtist_protocol
+
+    instance.new_object("object_0_0")
+    instance.link_object_to_scene("Scene", "object_0_0")
+    instance.new_object("object_1_0")
+    instance.new_object("object_1_1")
+    instance.link_object_to_scene("Scene", "object_1_0")
+    instance.link_object_to_scene("Scene", "object_1_1")
+    instance.expected_counts = {MessageType.ADD_OBJECT_TO_SCENE: 3}
+    instance.flush_collections()
+    instance.assert_matches()
+
+
+@pytest.mark.parametrize("vrtist_protocol", [False, True])
+def test_link_object_to_scene_and_collection(vrtist_scene_instances, vrtist_protocol):
+    """Test linking objects to both scenes and collections"""
+    instance = vrtist_scene_instances
+    instance.vrtist_protocol = vrtist_protocol
+
+    instance.new_object("object")
+    instance.link_object_to_scene("Scene", "object")
+    instance.new_collection("collection")
+    instance.link_collection_to_scene("Scene", "collection")
+    instance.link_object_to_collection("collection", "object")
+    instance.flush_collections()
+    instance.assert_matches()
+
+
+@pytest.mark.parametrize("vrtist_protocol", [False, True])
+def test_unlink_object_from_scene(vrtist_scene_instances, vrtist_protocol):
+    """Test unlinking objects from scenes"""
+    instance = vrtist_scene_instances
+    instance.vrtist_protocol = vrtist_protocol
+
+    instance.new_object("UNLINKED_object_1_0")
+    instance.new_object("LINKED_object_1_1")
+
+    instance.link_object_to_scene("Scene", "UNLINKED_object_1_0")
+    instance.link_object_to_scene("Scene", "LINKED_object_1_1")
+    instance.unlink_object_from_scene("Scene", "UNLINKED_object_1_0")
+    instance.expected_counts = {
+        MessageType.REMOVE_OBJECT_FROM_SCENE: 0,
+        MessageType.ADD_OBJECT_TO_SCENE: 1,
+    }
+    instance.flush_collections()
+    instance.assert_matches()
+
+
+@pytest.mark.parametrize("vrtist_protocol", [False, True])
+def test_rename_object_in_scene(vrtist_scene_instances, vrtist_protocol):
+    """Test renaming objects within scenes"""
+    instance = vrtist_scene_instances
+    instance.vrtist_protocol = vrtist_protocol
+
+    instance.new_object("object_1_0")
+    instance.new_object("OLD_object_1_1")
+
+    instance.link_object_to_scene("Scene", "object_1_0")
+    instance.link_object_to_scene("Scene", "OLD_object_1_1")
+    instance.rename_object("OLD_object_1_1", "NEW_object_1_1")
+
+    instance.expected_counts = {MessageType.ADD_OBJECT_TO_SCENE: 2}
+    instance.flush_collections()
+    instance.assert_matches()
+
+
+@pytest.mark.parametrize("vrtist_protocol", [False, True])
+def test_rename_collection_in_scene(vrtist_scene_instances, vrtist_protocol):
+    """Test renaming collections within scenes"""
+    instance = vrtist_scene_instances
+    instance.vrtist_protocol = vrtist_protocol
+
+    instance.new_collection("collection_1_0")
+    instance.new_collection("OLD_collection_1_1")
+
+    instance.link_collection_to_scene("Scene", "collection_1_0")
+    instance.link_collection_to_scene("Scene", "OLD_collection_1_1")
+    instance.rename_collection("OLD_collection_1_1", "NEW_collection_1_1")
+    instance.expected_counts = {
+        MessageType.ADD_COLLECTION_TO_SCENE: 2,
+    }
+
+    instance.flush_collections()
+    instance.assert_matches()
 
 
 if __name__ == "__main__":
-    unittest.main()
+    pytest.main([__file__])

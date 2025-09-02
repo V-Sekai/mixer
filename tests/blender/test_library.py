@@ -1,23 +1,12 @@
-import unittest
+import pytest
 
 from tests import files_folder
-from tests.blender.blender_testcase import BlenderTestCase
-from tests.mixer_testcase import BlenderDesc
+from tests.conftest import BlenderTestMixin, TestAssertionsMixin
 
 
-class TestCase(BlenderTestCase):
+class TestCase(BlenderTestMixin, TestAssertionsMixin):
     _lib_1_1_file = str(files_folder() / "lib_1_1.blend")
     _lib_3_1_file = str(files_folder() / "lib_3_1.blend")
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-    def setUp(self, sender_blendfile=files_folder() / "empty.blend"):
-        receiver_blendfile = files_folder() / "empty.blend"
-        sender = BlenderDesc(load_file=sender_blendfile, wait_for_debugger=False)
-        receiver = BlenderDesc(load_file=receiver_blendfile, wait_for_debugger=False)
-        blenderdescs = [sender, receiver]
-        super().setUp(blenderdescs=blenderdescs)
 
 
 class TestDirect(TestCase):
@@ -70,7 +59,7 @@ bpy.data.scenes[0].camera = bpy.data.objects[0]
         self.send_string(ref_camera, to=0)
         self.assert_matches()
 
-    @unittest.skip("Waiting for BlenddataLibraries.remove in 2.91")
+    @pytest.mark.skip(reason="Waiting for BlenddataLibraries.remove in 2.91")
     def test_remove_link_and_library(self):
         self.send_string(self._create_link, to=0)
         self.send_string(self._remove_link, to=0)
@@ -187,13 +176,13 @@ obj.material_slots[0].material = bpy.data.materials[1]
 
 
 class TestNestedSharedFolders(TestNested):
-    def setUp(self):
+    def setup_method(self, method):
         shader_folders = str(files_folder())
         self.shared_folders = [
             [shader_folders],
             [shader_folders],
         ]
-        super().setUp()
+        super().setup_method(method)
 
 
 class TestCollectionNested(TestCase):
@@ -259,7 +248,7 @@ bpy.data.libraries.remove(bpy.data.library[0])
         self.send_string(self._create_link, to=0)
         self.assert_matches()
 
-    @unittest.skip("Waiting for BlenddataLibraries.remove in 2.91")
+    @pytest.mark.skip(reason="Waiting for BlenddataLibraries.remove in 2.91")
     def test_remove_link_and_library(self):
         self.send_string(self._create_link, to=0)
         self.send_string(self._remove_link, to=0)
@@ -267,29 +256,25 @@ bpy.data.libraries.remove(bpy.data.library[0])
         self.assert_matches()
 
 
-@unittest.skip("for manual testing")
+@pytest.mark.skip(reason="for manual testing")
 class TestMissingDirectLibrary(TestCase):
     # Since there are not the same datablocks on both sides, the usual comparison is not possible. It might be possible
     # to sompare the proxy contents, that should be the same
-    def setUp(self):
+    def setup_method(self, method):
         broken_file = files_folder() / "lib_2_1_broken.blend"
-        super().setUp(broken_file)
+        super().setup_method(method, sender_blendfile=broken_file)
 
     def test_missing_lib(self):
         self.assert_matches()
 
 
-@unittest.skip("for manual testing")
+@pytest.mark.skip(reason="for manual testing")
 class TestMissingIndirectLibrary(TestCase):
     # Since there are not the same datablocks on both sides, the usual comparison is not possible. It might be possible
     # to sompare the proxy contents, that should be the same
-    def setUp(self):
+    def setup_method(self, method):
         broken_file = files_folder() / "lib_3_1_broken.blend"
-        super().setUp(broken_file)
+        super().setup_method(method, sender_blendfile=broken_file)
 
     def test_missing_lib(self):
         self.assert_matches()
-
-
-if __name__ == "main":
-    unittest.main()

@@ -1,0 +1,41 @@
+schema_version = "1.0.0"
+
+id = "mixer"
+version = "1.2.0"
+name = "Mixer"
+tagline = "Real-time collaborative Blender workflows with synchronization"
+maintainer = "K. S. Ernest (iFire) Lee <ernest.lee@chibifire.com>"
+type = "add-on"
+
+website = "https://github.com/V-Sekai/mixer"
+
+tags = ["Modeling", "Scene", "Animation", "Collaboration", "Synchronization"]
+
+blender_version_min = "4.5.0"
+blender_version_max = "4.6.0"
+
+license = ["SPDX:MIT", "SPDX:GPL-3.0-or-later"]
+
+copyright = [
+  "2025-present K. S. Ernest (iFire) Lee",
+  "2020 Ubisoft",
+]
+
+[permissions]
+network = "Server/client network communication for synchronization"
+files = "Create and manage collaborative Blender session files"
+
+[permissions.network]
+direction = ["inbound", "outbound"]
+domains = "127.0.0.1, 0.0.0.0"
+interfaces = ["lo", "eth0", "wlan0", "wifi"]
+
+[permissions.files]
+paths = "blender://"
+
+[blender_manifest.prefs]
+system.enhanced_synchronization = true
+ui.collaborative_panels = true
+network.auto_discovery = false
+network.default_port = 12800
+logging.verbose_mode = false

@@ -42,12 +42,9 @@ jobs:
           contains(github.ref, 'main') ||
           contains(github.ref, 'develop') ||
           github.event_name == 'pull_request'
-        env:
-          PYTHONPATH: ${{ github.workspace }}:addons
         run: |
           # Run basic pytest tests (without Blender integration)
-          uv run pytest tests/test_test.py tests/blender/test_proxy.py -v
-        continue-on-error: true
+          PYTHONPATH="$(pwd)/addons:$(pwd) uv run pytest -v
 
       - name: Upload build artifacts
         if: contains(github.ref, 'main')

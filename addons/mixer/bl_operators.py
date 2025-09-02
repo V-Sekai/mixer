@@ -152,7 +152,7 @@ class CreateRoomOperator(bpy.types.Operator):
         shared_folders = []
         for item in mixer_prefs.shared_folders:
             shared_folders.append(item.shared_folder)
-        create_room(room, mixer_prefs.vrtist_protocol, shared_folders, mixer_prefs.ignore_version_check)
+        create_room(room, False, shared_folders, mixer_prefs.ignore_version_check)
 
         return {"FINISHED"}
 
@@ -263,70 +263,7 @@ class DeleteRoomOperator(bpy.types.Operator):
         return {"FINISHED"}
 
 
-class DownloadRoomOperator(bpy.types.Operator):
-    """Download content of an empty room"""
 
-    bl_idname = "mixer.download_room"
-    bl_label = "Download Room"
-    bl_options = {"REGISTER"}
-
-    filepath: bpy.props.StringProperty(subtype="FILE_PATH")
-
-    @classmethod
-    def poll(cls, context):
-        room_index = get_mixer_props().room_index
-        return (
-            is_client_connected()
-            and room_index < len(get_mixer_props().rooms)
-            and (get_mixer_props().rooms[room_index].users_count == 0)
-        )
-
-    def invoke(self, context, event):
-        context.window_manager.fileselect_add(self)
-        return {"RUNNING_MODAL"}
-
-    def execute(self, context):
-        from mixer.broadcaster.room_bake import download_room, save_room
-
-        prefs = get_mixer_prefs()
-        props = get_mixer_props()
-        room_index = props.room_index
-        room = props.rooms[room_index].name
-        protocol = props.rooms[room_index].protocol
-        attributes, commands = download_room(
-            prefs.host, prefs.port, room, bpy.app.version_string, mixer.display_version, protocol == "Generic"
-        )
-        save_room(attributes, commands, self.filepath)
-
-        return {"FINISHED"}
-
-
-class UploadRoomOperator(bpy.types.Operator):
-    """Upload content of an empty room"""
-
-    bl_idname = "mixer.upload_room"
-    bl_label = "Upload Room"
-    bl_options = {"REGISTER"}
-
-    @classmethod
-    def poll(cls, context):
-        mixer_props = get_mixer_props()
-        return (
-            is_client_connected()
-            and os.path.exists(mixer_props.upload_room_filepath)
-            and mixer_props.upload_room_name not in share_data.client.rooms_attributes
-        )
-
-    def execute(self, context):
-        from mixer.broadcaster.room_bake import load_room, upload_room
-
-        prefs = get_mixer_prefs()
-        props = get_mixer_props()
-
-        attributes, commands = load_room(props.upload_room_filepath)
-        upload_room(prefs.host, prefs.port, props.upload_room_name, attributes, commands)
-
-        return {"FINISHED"}
 
 
 class LeaveRoomOperator(bpy.types.Operator):
@@ -398,147 +335,18 @@ class DisconnectOperator(bpy.types.Operator):
         return {"FINISHED"}
 
 
-class LaunchVRtistOperator(bpy.types.Operator):
-    """Launch a VRtist instance"""
-
-    bl_idname = "vrtist.launch"
-    bl_label = "Launch VRtist"
-    bl_options = {"REGISTER"}
-
-    vrtist_process = None
-
-    @classmethod
-    def poll(cls, context):
-        # Check VRtist process to auto disconnect
-        if cls.vrtist_process is not None and cls.vrtist_process.poll() is not None:
-            cls.vrtist_process = None
-            leave_current_room()
-            disconnect()
-
-        # Manage button state
-        return os.path.isfile(get_mixer_prefs().VRtist)
-
-    def execute(self, context):
-        bpy.data.window_managers["WinMan"].mixer.send_bake_meshes = True
-
-        mixer_prefs = get_mixer_prefs()
-        if not share_data.client or not share_data.client.current_room:
-            timeout = 10
-            try:
-                connect()
-            except Exception as e:
-                self.report({"ERROR"}, f"vrtist.launch connect error : {e!r}")
-                return {"CANCELLED"}
-
-            # Wait for local server creation
-            while timeout > 0 and not is_client_connected():
-                time.sleep(0.5)
-                timeout -= 0.5
-            if timeout <= 0:
-                self.report({"ERROR"}, "vrtist.launch connect error : unable to connect")
-                return {"CANCELLED"}
-
-            logger.warning("LaunchVRtistOperator.execute({mixer_prefs.room})")
-            shared_folders = []
-            for item in mixer_prefs.shared_folders:
-                shared_folders.append(item.shared_folder)
-            mixer_prefs.ignore_version_check = True
-            join_room(mixer_prefs.room, True, shared_folders, mixer_prefs.ignore_version_check)
-
-            # Wait for room creation/join
-            timeout = 10
-            while timeout > 0 and share_data.client.current_room is None:
-                time.sleep(0.5)
-                timeout -= 0.5
-            if timeout <= 0:
-                self.report({"ERROR"}, "vrtist.launch connect error : unable to join room")
-                return {"CANCELLED"}
-
-            # Wait for client id
-            timeout = 10
-            while timeout > 0 and share_data.client.client_id is None:
-                network_consumer_timer()
-                time.sleep(0.1)
-                timeout -= 0.1
-            if timeout <= 0:
-                self.report({"ERROR"}, "vrtist.launch connect error : unable to retrieve client id")
-                return {"CANCELLED"}
-
-        color = share_data.client.clients_attributes[share_data.client.client_id].get(
-            ClientAttributes.USERCOLOR, (0.0, 0.0, 0.0)
-        )
-        color = (int(c * 255) for c in color)
-        color = "#" + "".join(f"{c:02x}" for c in color)
-        name = "VR " + share_data.client.clients_attributes[share_data.client.client_id].get(
-            ClientAttributes.USERNAME, "client"
-        )
-
-        args = [
-            mixer_prefs.VRtist,
-            "--room",
-            share_data.client.current_room,
-            "--hostname",
-            mixer_prefs.host,
-            "--port",
-            str(mixer_prefs.port),
-            "--master",
-            str(share_data.client.client_id),
-            "--usercolor",
-            color,
-            "--username",
-            name,
-            "--startScene",
-            os.path.split(bpy.data.filepath)[1],
-        ]
-        LaunchVRtistOperator.vrtist_process = subprocess.Popen(
-            args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=False
-        )
-        return {"FINISHED"}
-
-
-class ToggleBetweenMixerAndVRtistPanels(bpy.types.Operator):
-    bl_idname = "mixervrtist.toggle"
-    bl_label = "Mixer / VRtist Panels"
-    bl_description = "Toggle Between Mixer and VRtist Panels"
-    bl_options = {"INTERNAL"}
-
-    mixer_desciption = """Toggle from VRtist to Mixer panel.
-Mixer offers a collaborative real-time environment for Blender users.
-\nSee the documentation for more information"""
-    vrtist_desciption = """Toggle from Mixer to VRtist panel.
-This panel will allow you to set up a live link between Blender and VRtist,
-a VR application developed by Ubisoft Animation Studio for immersive animation direction.
-\nSee the documentation for more information"""
-    panel_mode: bpy.props.StringProperty(default="MIXER")
-
-    @classmethod
-    def description(cls, context, properties):
-        descr = "Toggle between Mixer and VRtist panels.\n"
-        if "MIXER" == properties.panel_mode:
-            descr = cls.mixer_desciption
-        elif "VRTIST" == properties.panel_mode:
-            descr = cls.vrtist_desciption
-        return descr
-
-    def invoke(self, context, event):
-        mixer_prefs = get_mixer_prefs()
-        mixer_prefs.display_mixer_vrtist_panels = self.panel_mode
-        return {"FINISHED"}
+# VRtist integration removed to simplify codebase
 
 
 classes = (
-    LaunchVRtistOperator,
     CreateRoomOperator,
     ConnectOperator,
     DisconnectOperator,
     JoinRoomOperator,
     DeleteRoomOperator,
     LeaveRoomOperator,
-    DownloadRoomOperator,
-    UploadRoomOperator,
     SharedFoldersAddFolderOperator,
     SharedFoldersRemoveFolderOperator,
-    ToggleBetweenMixerAndVRtistPanels,
 )
 
 register_factory, unregister_factory = bpy.utils.register_classes_factory(classes)

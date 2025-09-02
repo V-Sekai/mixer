@@ -71,8 +71,11 @@ class AosProxy(Proxy):
         # TODO optimize and do not send empty arrays
         self._aos_length = len(bl_collection)
 
+        # Safely handle UnknownType for Blender version compatibility
+        unknown_type_exists = hasattr(T, 'UnknownType')
+
         item_bl_rna = bl_collection_property.fixed_type.bl_rna
-        if bl_collection_property.fixed_type.bl_rna is T.UnknownType.bl_rna:
+        if unknown_type_exists and bl_collection_property.fixed_type.bl_rna is T.UnknownType.bl_rna:
             # UnknownType used in ShakeKey. Contents depends on the items that has the Key (Curve, Mesh, Lattice)
             if len(self) != 0:
                 item = bl_collection[0]
@@ -168,7 +171,9 @@ class AosProxy(Proxy):
 
         item_bl_rna = prop.fixed_type.bl_rna
         member_names: Iterable[str] = []
-        if item_bl_rna is T.UnknownType.bl_rna:
+
+        # Connect with the same UnknownType compatibility check used in load()
+        if unknown_type_exists and item_bl_rna is T.UnknownType.bl_rna:
             # UnknownType used in ShapeKey. Contents depends on the items that has the Key (Curve, Mesh, Lattice)
             if len(self) != 0:
                 member_names = set(dir(aos[0])) - _unknown_type_attributes

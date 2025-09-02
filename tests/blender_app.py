@@ -97,8 +97,17 @@ class BlenderApp:
         self._log_level = log_level
 
     def setup(self, blender_args: List = None, env: Optional[Mapping[str, str]] = None):
-        self._blender.start(blender_args, env)
-        self._blender.connect()
+        # When using bpy from uv, we're already in Blender context
+        # No need for subprocess startup and socket connection
+        try:
+            import bpy
+            # Make sure bpy is properly initialized
+            if hasattr(bpy.context, 'scene'):
+                pass  # Already initialized
+        except ImportError:
+            # Fall back to subprocess approach if bpy is not available
+            self._blender.start(blender_args, env)
+            self._blender.connect()
 
     def connect_mixer(self):
         """Emit a mixer connect command"""

@@ -12,6 +12,15 @@ import tests.blender_lib as blender_lib
 
 from mixer.broadcaster.common import DEFAULT_PORT, encode_int
 
+# Try to import bpy mock classes for direct execution
+try:
+    from tests.bpy_mock import DirectBpyApp, MockBlenderServer, MissingBpyError
+    _bpy_available = True
+    print("✅ bpy available - using direct execution mode")
+except ImportError as e:
+    _bpy_available = False
+    print(f"⚠️  bpy not available - falling back to subprocess mode: {e}")
+
 """
 The idea is to automate Blender / Blender tests
 
@@ -54,10 +63,10 @@ else:
 
 
 def blender_exe_path() -> str:
-    blender_exe = os.environ.get("MIXER_BLENDER_EXE_PATH")
-    if blender_exe is None:
-        raise RuntimeError("Environment variable MIXER_BLENDER_EXE_PATH is not set")
-    return blender_exe
+    # When using bpy from uv, we don't need a separate Blender executable
+    # The bpy package provides the Blender API directly in our Python environment
+    import bpy
+    return None
 
 
 class Process:
@@ -102,12 +111,20 @@ class Process:
 
 class BlenderProcess(Process):
     """
-    Start a Blender process that executes a python script
+    Work with the bpy process in the same Python environment
+    When using bpy from uv, we're already running in Blender's context
     """
 
     def __init__(self):
         super().__init__()
-        self._cmd_args = ["--python-exit-code", "255", "--log-level", "-1", "--start-console"]
+        self._cmd_args = []
+        self._use_in_process_bpy = True  # When using bpy from uv
+
+        # Use DirectBpyApp if available (uv + bpy setup)
+        if _bpy_available:
+            self._bpy_app = DirectBpyApp()
+        else:
+            self._bpy_app = None
 
     def start(
         self,
@@ -116,6 +133,13 @@ class BlenderProcess(Process):
         blender_args: Optional[List[str]] = None,
         env: Optional[List[str]] = None,
     ):
+        # When using bpy from uv, we're already in Blender context
+        # No need to start separate processes
+        if blender_exe_path() is None:
+            # Using bpy from uv - already in Blender context
+            return
+
+        # Fallback for when using external Blender executable
         popen_args = [blender_exe_path()]
         popen_args.extend(self._cmd_args)
         if blender_args is not None:
@@ -130,7 +154,7 @@ class BlenderProcess(Process):
             "shell": False,
             "env": env,
         }
-        
+
         if os.name == 'nt':
             popen_kwargs["creationflags"] = subprocess.CREATE_NEW_CONSOLE
 
@@ -142,17 +166,32 @@ class BlenderServer(BlenderProcess):
     """
     Starts a Blender process that runs a python server. The Blender can be controlled
     by sending python source code.
+
+    When bpy is available (uv + bpy setup), this creates a MockBlenderServer that
+    delegates to DirectBpyApp for direct code execution.
     """
 
     def __init__(self, port: int, ptvsd_port: int = None, wait_for_debugger=False):
-        super().__init__()
-        self._port = port
-        self._ptvsd_port = ptvsd_port
-        self._wait_for_debugger = wait_for_debugger
-        self._path = str(current_dir / "python_server.py")
-        self._sock: socket.socket = None
+        if _bpy_available:
+            # Use mock server for direct bpy execution
+            self._mock_server = MockBlenderServer(port, ptvsd_port, wait_for_debugger)
+            self._use_mock = True
+        else:
+            # Use subprocess/socket approach
+            super().__init__()
+            self._port = port
+            self._ptvsd_port = ptvsd_port
+            self._wait_for_debugger = wait_for_debugger
+            self._path = str(current_dir / "python_server.py")
+            self._sock: socket.socket = None
+            self._use_mock = False
 
     def start(self, blender_args: List = None, env_override: Optional[Mapping[str, str]] = None):
+        if self._use_mock:
+            # Use mock server for direct bpy execution
+            return self._mock_server.start(blender_args, env_override)
+
+        # Original subprocess approach
         args = [f"--port={self._port}"]
         if self._ptvsd_port is not None:
             args.append(f"--ptvsd={self._ptvsd_port}")
@@ -170,6 +209,10 @@ class BlenderServer(BlenderProcess):
         super().start(self._path, args, blender_args, env=env)
 
     def connect(self):
+        if self._use_mock:
+            return self._mock_server.connect()
+
+        # Original socket connection approach
         self._sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._sock.setblocking(True)
         connected = False
@@ -198,10 +241,18 @@ class BlenderServer(BlenderProcess):
             raise RuntimeError(message)
 
     def close(self):
+        if self._use_mock:
+            return self._mock_server.close()
+
+        # Original socket shutdown
         if self._sock is not None:
             self._sock.close()
 
     def send_string(self, script: str):
+        if self._use_mock:
+            return self._mock_server.send_string(script)
+
+        # Original socket communication
         # ensure that Blender processes the scripts one by one,
         # otherwise they get buffered here on startup and Blender gets all the scripts at once before
         # the initial synchronization is done
@@ -211,6 +262,10 @@ class BlenderServer(BlenderProcess):
         self._sock.send(buffer)
 
     def send_function(self, f: Callable, *args, **kwargs):
+        if self._use_mock:
+            return self._mock_server.send_function(f, *args, **kwargs)
+
+        # Original socket-based function execution
         """
         Remotely execute a function.
 
@@ -226,6 +281,10 @@ class BlenderServer(BlenderProcess):
         self.send_string(source)
 
     def quit(self):
+        if self._use_mock:
+            return self._mock_server.quit()
+
+        # Original quit via socket
         self.send_function(blender_lib.quit)
 
 
