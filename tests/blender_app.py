@@ -4,7 +4,7 @@ from typing import Iterable, List, Optional, Mapping
 import sys
 
 import tests.blender_lib as bl
-from tests.process import BlenderServer
+from tests.process import BlenderServer, UvBpyServer
 
 logging.basicConfig(stream=sys.stderr, level=logging.WARNING)
 logger = logging.getLogger(__name__)
@@ -86,11 +86,14 @@ else:
 
 
 class BlenderApp:
-    def __init__(self, port: int, ptvsd_port: int = None, wait_for_debugger=False):
+    def __init__(self, port: int, ptvsd_port: int = None, wait_for_debugger=False, use_uv_bpy: bool = False):
         self._port = port
         self._ptvsd_port = ptvsd_port
         self._wait_for_debugger = wait_for_debugger
-        self._blender: BlenderServer = BlenderServer(self._port, self._ptvsd_port, self._wait_for_debugger)
+        if use_uv_bpy:
+            self._blender = UvBpyServer(self._port, self._ptvsd_port, self._wait_for_debugger)
+        else:
+            self._blender = BlenderServer(self._port, self._ptvsd_port, self._wait_for_debugger)
         self._log_level = logging.WARNING
 
     def set_log_level(self, log_level: int):

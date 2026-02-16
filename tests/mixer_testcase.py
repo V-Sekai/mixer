@@ -81,6 +81,7 @@ class MixerTestCase:
         blenderdescs: Tuple[BlenderDesc, BlenderDesc] = (BlenderDesc(), BlenderDesc()),
         server_args: Optional[List[str]] = None,
         join=True,
+        use_uv_bpy: bool = False,
     ):
         """
         if a blendfile if not specified, blender will start with its default file.
@@ -106,7 +107,7 @@ class MixerTestCase:
                 args = ["--window-geometry", window_x, "0", "960", "1080"]
                 if blenderdesc.load_file is not None:
                     args.append(str(blenderdesc.load_file))
-                blender = BlenderApp(python_port + i, ptvsd_port + i, blenderdesc.wait_for_debugger)
+                blender = BlenderApp(python_port + i, ptvsd_port + i, blenderdesc.wait_for_debugger, use_uv_bpy=use_uv_bpy)
                 blender.set_log_level(self._log_level)
                 blender.setup(args)
                 if join:

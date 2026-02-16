@@ -1,0 +1,186 @@
+"""
+Integration test demonstrating uv bpy subprocess usage for testing
+"""
+import unittest
+import subprocess
+import tempfile
+import time
+from pathlib import Path
+
+class TestUvBpyIntegration(unittest.TestCase):
+    """Test integration using uv bpy subprocesses"""
+
+    def test_uv_bpy_subprocess_communication(self):
+        """Test that we can run uv bpy subprocesses and communicate with them"""
+
+        # Create a test script that acts as a "server" (simplified version of python_server.py)
+        server_script = '''
+import socket
+import bpy
+import struct
+from mixer.broadcaster.common import encode_int
+
+# Create a simple socket server
+HOST = "127.0.0.1"
+PORT = 9999
+
+server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+server_socket.bind((HOST, PORT))
+server_socket.listen(1)
+
+print(f"Server listening on {HOST}:{PORT}")
+
+client_socket, addr = server_socket.accept()
+print(f"Connection from {addr}")
+
+# Receive and execute commands
+while True:
+    try:
+        # Receive length
+        length_data = client_socket.recv(4)
+        if not length_data:
+            break
+        length = struct.unpack("!I", length_data)[0]
+
+        # Receive command
+        command_data = client_socket.recv(length)
+        if not command_data:
+            break
+
+        command = command_data.decode("utf-8")
+        print(f"Executing: {command[:50]}...")
+
+        # Execute the command
+        try:
+            exec(command)
+            response = "OK"
+        except Exception as e:
+            response = f"ERROR: {e}"
+
+        # Send response back
+        response_data = response.encode("utf-8")
+        client_socket.send(encode_int(len(response_data)))
+        client_socket.send(response_data)
+
+    except Exception as e:
+        print(f"Error: {e}")
+        break
+
+client_socket.close()
+server_socket.close()
+print("Server shutdown")
+'''
+
+        # Create a client script that sends commands
+        client_script = '''
+import socket
+import bpy
+import struct
+from mixer.broadcaster.common import encode_int
+
+HOST = "127.0.0.1"
+PORT = 9999
+
+# Connect to server
+sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+sock.connect((HOST, PORT))
+
+# Send a command to create a cube
+command = """
+bpy.ops.mesh.primitive_cube_add()
+cube = bpy.context.active_object
+cube.name = 'TestCube'
+print(f'Created cube: {cube.name}')
+"""
+
+command_data = command.encode("utf-8")
+sock.send(encode_int(len(command_data)))
+sock.send(command_data)
+
+# Receive response
+length_data = sock.recv(4)
+length = struct.unpack("!I", length_data)[0]
+response_data = sock.recv(length)
+response = response_data.decode("utf-8")
+
+print(f"Response: {response}")
+
+# Send another command to check the cube exists
+command2 = """
+cube = bpy.data.objects.get('TestCube')
+if cube:
+    print(f'Cube found at location: {cube.location}')
+else:
+    print('Cube not found')
+"""
+
+command2_data = command2.encode("utf-8")
+sock.send(encode_int(len(command2_data)))
+sock.send(command2_data)
+
+# Receive second response
+length_data2 = sock.recv(4)
+length2 = struct.unpack("!I", length_data2)[0]
+response_data2 = sock.recv(length2)
+response2 = response_data2.decode("utf-8")
+
+print(f"Response 2: {response2}")
+
+sock.close()
+'''
+
+        # Write scripts to temp files
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as server_file:
+            server_file.write(server_script)
+            server_path = server_file.name
+
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as client_file:
+            client_file.write(client_script)
+            client_path = client_file.name
+
+        try:
+            # Start server subprocess
+            server_cmd = ["uv", "run", "python", server_path]
+            server_proc = subprocess.Popen(
+                server_cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True
+            )
+
+            # Wait a bit for server to start
+            time.sleep(2)
+
+            # Start client subprocess
+            client_cmd = ["uv", "run", "python", client_path]
+            client_proc = subprocess.Popen(
+                client_cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True
+            )
+
+            # Wait for client to complete
+            client_stdout, client_stderr = client_proc.communicate(timeout=10)
+            server_stdout, server_stderr = server_proc.communicate(timeout=10)
+
+            print("Client stdout:", client_stdout)
+            print("Client stderr:", client_stderr)
+            print("Server stdout:", server_stdout)
+            print("Server stderr:", server_stderr)
+
+            # Check results
+            self.assertEqual(client_proc.returncode, 0, f"Client failed: {client_stderr}")
+            self.assertEqual(server_proc.returncode, 0, f"Server failed: {server_stderr}")
+            self.assertIn("Created cube", server_stdout)
+            self.assertIn("Cube found", server_stdout)
+            self.assertIn("OK", client_stdout)
+
+        finally:
+            # Clean up temp files
+            Path(server_path).unlink(missing_ok=True)
+            Path(client_path).unlink(missing_ok=True)
+
+if __name__ == '__main__':
+    unittest.main()
