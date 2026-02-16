@@ -40,7 +40,6 @@ jobs:
       - name: Run tests
         if: |
           contains(github.ref, 'main') ||
-          contains(github.ref, 'develop') ||
           github.event_name == 'pull_request'
         env:
           PYTHONPATH: ${{ github.workspace }}:addons

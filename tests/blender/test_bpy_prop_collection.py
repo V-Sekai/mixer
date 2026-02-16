@@ -148,7 +148,7 @@ import bpy
 bpy.ops.gpencil.layer_active(layer=1)
 bpy.ops.gpencil.layer_remove()
 """
-        self.send_string(layer_remove, to=“0)
+        self.send_string(layer_remove, to=0)
 
         self.assert_matches()
 
