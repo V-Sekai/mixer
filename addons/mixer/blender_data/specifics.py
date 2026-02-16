@@ -480,7 +480,23 @@ def _(bpy_struct: T.Struct, properties: ItemsView) -> ItemsView:
     return _filter_properties(properties, filter_props)
 
 
-@conditional_properties.register(T.EffectSequence)  # type: ignore[no-redef]
+# EffectSequence was removed in Blender 5.0+, check if it exists before registering
+if hasattr(T, 'EffectSequence'):
+    @conditional_properties.register(T.EffectSequence)  # type: ignore[no-redef]
+    def _(bpy_struct: T.Struct, properties: ItemsView) -> ItemsView:
+        if bpy.app.version >= (2, 92, 0):
+            return properties
+        filter_props = []
+        if not bpy_struct.use_crop:
+            filter_props.append("crop")
+        if not bpy_struct.use_translation:
+            filter_props.append("transform")
+
+        if not filter_props:
+            return properties
+
+        return _filter_properties(properties, filter_props)
+
 @conditional_properties.register(T.ImageSequence)
 @conditional_properties.register(T.MaskSequence)
 @conditional_properties.register(T.MetaSequence)
@@ -764,6 +780,9 @@ _non_effect_sequences = {"IMAGE", "SOUND", "META", "SCENE", "MOVIE", "MOVIECLIP"
 
 @lru_cache(None)
 def _effect_sequences():
+    # EffectSequence was removed in Blender 5.0+, return empty set if it doesn't exist
+    if not hasattr(T, 'EffectSequence'):
+        return set()
     return set(T.EffectSequence.bl_rna.properties["type"].enum_items.keys()) - _non_effect_sequences
 
 

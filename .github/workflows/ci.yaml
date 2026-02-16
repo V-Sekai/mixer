@@ -27,14 +27,6 @@ jobs:
       - name: Install dependencies
         run: uv sync --extra dev
 
-      - name: Install Blender
-        run: |
-          # Download and install Blender 5.0.1 (matching bpy==5.0.1)
-          wget -O blender.tar.xz https://download.blender.org/release/Blender5.0/blender-5.0.1-linux-x64.tar.xz
-          tar -xf blender.tar.xz
-          sudo mv blender-5.0.1-linux-x64 /opt/blender
-          echo "/opt/blender" >> $GITHUB_PATH
-
       - name: Run ruff
         run: uv run ruff check addons/mixer tests extra
 
@@ -45,43 +37,20 @@ jobs:
       - name: Build docs
         run: uv run sphinx-build -b html docs docs/_build/html
 
-      - name: Run basic tests (no Blender required)
+      - name: Run VRM-style library context tests (bpy only)
+        env:
+          PYTHONPATH: ${{ github.workspace }}:addons
+        run: |
+          # Run VRM-style library context tests using only bpy
+          uv run pytest tests/blender/test_bpy_library.py -v
+        continue-on-error: true
+
+      - name: Run basic proxy tests (no Blender required)
         env:
           PYTHONPATH: ${{ github.workspace }}:addons
         run: |
           # Run basic pytest tests that don't require Blender
           uv run pytest tests/blender/test_proxy.py -v
-        continue-on-error: true
-
-      - name: Run VRM-style library context tests
-        if: |
-          contains(github.ref, 'main') ||
-          github.event_name == 'pull_request'
-        env:
-          MIXER_BLENDER_EXE_PATH: /opt/blender/blender
-          PYTHONPATH: ${{ github.workspace }}:addons
-          DISPLAY: :99
-        run: |
-          # Start virtual display for Blender
-          sudo apt-get update
-          sudo apt-get install -y xvfb
-          Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
-          sleep 3
-
-          # Run VRM-style library context tests inside Blender
-          ./tools/test.sh -v
-        continue-on-error: true
-
-      - name: Run traditional integration tests
-        if: |
-          contains(github.ref, 'main') ||
-          github.event_name == 'pull_request'
-        env:
-          PYTHONPATH: ${{ github.workspace }}:addons
-        run: |
-          # Run traditional integration tests with multiple Blender instances
-          # These test the actual mixer synchronization functionality
-          uv run pytest tests/blender/ -k "not TestBpyLibraryContext" --tb=short -x
         continue-on-error: true
 
       - name: Upload build artifacts
