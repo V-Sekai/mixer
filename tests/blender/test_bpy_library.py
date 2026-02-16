@@ -15,7 +15,7 @@ class TestBpyLibrary(unittest.TestCase):
 
     def setUp(self):
         if not HAS_BPY:
-            self.skipTest("bpy not available - not running in Blender context")
+            self.fail("bpy not available - required for library context testing")
 
     def test_bpy_import(self):
         """Test that bpy can be imported"""
@@ -53,16 +53,14 @@ class TestBpyLibrary(unittest.TestCase):
         """Test that bpy.utils is available"""
         self.assertTrue(hasattr(bpy, 'utils'))
 
-class TestBpyStandalone(unittest.TestCase):
-    """Test bpy library compatibility without Blender"""
+class TestBpyRequirement(unittest.TestCase):
+    """Test that bpy is available as required"""
 
-    def test_bpy_import_attempt(self):
-        """Test that bpy import attempt is handled gracefully"""
-        if HAS_BPY:
-            self.assertIsNotNone(bpy)
-        else:
-            # If bpy is not available, that's expected in CI/CD
-            self.skipTest("bpy not available - expected in CI/CD environment")
+    def test_bpy_must_be_available(self):
+        """Test that bpy import succeeds - this is a requirement"""
+        if not HAS_BPY:
+            self.fail("bpy library is required but not available. Install bpy==5.0.1")
+        self.assertIsNotNone(bpy)
 
 if __name__ == '__main__':
     unittest.main()

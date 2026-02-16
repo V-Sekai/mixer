@@ -42,6 +42,7 @@ jobs:
           PYTHONPATH: ${{ github.workspace }}:addons
         run: |
           # Run VRM-style library context tests using only bpy
+          # These tests will fail if bpy is not available, which is expected
           uv run pytest tests/blender/test_bpy_library.py -v
         continue-on-error: true
 
