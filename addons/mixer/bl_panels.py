@@ -383,8 +383,6 @@ def draw_server_users_ui(layout: bpy.types.UILayout):
 def draw_preferences_ui(mixer_prefs: MixerPreferences, context: bpy.types.Context):
     mixer_prefs.layout.prop(mixer_prefs, "category")
 
-    mixer_prefs.layout.prop(mixer_prefs, "display_mixer_vrtist_panels")
-
     layout = mixer_prefs.layout.box().column()
     layout.label(text="Connection Settings")
     draw_user_settings_ui(layout.row())
@@ -416,10 +414,7 @@ class MixerSettingsPanel(bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
-        mixer_prefs = get_mixer_prefs()
-        return (
-            "MIXER" == mixer_prefs.display_mixer_vrtist_panels
-        )
+        return True
 
     def connected(self):
         return share_data.client is not None and share_data.client.is_connected()

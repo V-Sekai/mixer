@@ -18,9 +18,6 @@ class BlenderTestCase(MixerTestCase):
     """
 
     def __init__(self):
-        # in case @parameterized_class is missing
-        if not hasattr(self, "vrtist_protocol"):
-            self.vrtist_protocol = False
         super().__init__()
 
     def setup_method(self, *args, **kwargs):

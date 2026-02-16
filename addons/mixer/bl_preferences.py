@@ -81,25 +81,16 @@ class MixerPreferences(bpy.types.AddonPreferences):
         update=update_panels_category,
     )
 
-    display_mixer_vrtist_panels: bpy.props.EnumProperty(
-        name="Display Mixer and VRtist Panels",
-        description="Control which panel is displayed between Mixer and VRtist",
-        items=[
-            ("MIXER", "Mixer", ""),
-        ],
-        default="MIXER",
-    )
-
     host: bpy.props.StringProperty(
-        name="Host", description="Server Host Name", default=os.environ.get("VRTIST_HOST", common.DEFAULT_HOST)
+        name="Host", description="Server Host Name", default=common.DEFAULT_HOST
     )
     port: bpy.props.IntProperty(
         name="Port",
         description="Port to use to connect the server host",
-        default=int(os.environ.get("VRTIST_PORT", common.DEFAULT_PORT)),
+        default=common.DEFAULT_PORT,
     )
     room: bpy.props.StringProperty(
-        name="Room", description="Name of the session room", default="RM_" + os.environ.get("VRTIST_ROOM", getuser())
+        name="Room", description="Name of the session room", default="RM_" + getuser()
     )
 
     # User name as displayed in peers user list
@@ -144,9 +135,6 @@ class MixerPreferences(bpy.types.AddonPreferences):
         get=get_log_level,
     )
 
-    vrtist_protocol: bpy.props.BoolProperty(
-        name="VRtist Protocol", default=os.environ.get("MIXER_VRTIST_PROTOCOL") == "0"
-    )
 
     ignore_version_check: bpy.props.BoolProperty(default=False, name="Ignore Room Version Check")
 
@@ -163,7 +151,7 @@ class MixerPreferences(bpy.types.AddonPreferences):
 
     shared_folders: bpy.props.CollectionProperty(name="Shared Folders", type=SharedFolderItem)
 
-    # Developer option to avoid sending scene content to server at the first connexion
+    # Developer option to avoid sending scene content to server at the first connection
     # Allow to quickly iterate debugging/test on large scenes with only one client in room
     # Main usage: optimization of client timers to check if updates are required
     no_send_scene_content: bpy.props.BoolProperty(name="Do Not Send Scene Content", default=False)

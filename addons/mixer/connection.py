@@ -51,13 +51,13 @@ def set_client_attributes():
     )
 
 
-def create_room(room_name: str, vrtist_protocol: bool = False, shared_folders=None, ignore_version_check: bool = False):
+def create_room(room_name: str, shared_folders=None, ignore_version_check: bool = False):
     if ignore_version_check:
         logger.warning("Ignoring version check")
-    join_room(room_name, vrtist_protocol, shared_folders, ignore_version_check)
+    join_room(room_name, shared_folders, ignore_version_check)
 
 
-def join_room(room_name: str, vrtist_protocol: bool = False, shared_folders=None, ignore_version_check: bool = False):
+def join_room(room_name: str, shared_folders=None, ignore_version_check: bool = False):
     prefs = get_mixer_prefs()
     logger.warning(f"join: room: {room_name}, user: {prefs.user}")
 
@@ -76,11 +76,11 @@ def join_room(room_name: str, vrtist_protocol: bool = False, shared_folders=None
     set_client_attributes()
     blender_version = bpy.app.version_string
     mixer_version = mixer.display_version
-    share_data.client.join_room(room_name, blender_version, mixer_version, ignore_version_check, not vrtist_protocol)
+    share_data.client.join_room(room_name, blender_version, mixer_version, ignore_version_check, True)
 
     if shared_folders is None:
         shared_folders = []
-    share_data.init_protocol(vrtist_protocol, shared_folders)
+    share_data.init_protocol(shared_folders)
     share_data.pending_test_update = False
 
     # join a room <==> want to track local changes

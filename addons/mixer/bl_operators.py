@@ -45,10 +45,8 @@ from mixer.connection import (
 
 logger = logging.getLogger(__name__)
 
-
 poll_is_client_connected = (lambda: is_client_connected(), "Client not connected")
 poll_already_in_a_room = (lambda: not is_client_connected() or not share_data.client.current_room, "Already in a room")
-
 
 class SharedFoldersAddFolderOperator(bpy.types.Operator, ImportHelper):
     bl_idname = "mixer.add_shared_folder"
@@ -79,7 +77,6 @@ class SharedFoldersAddFolderOperator(bpy.types.Operator, ImportHelper):
     def poll(cls, context):
         return generic_poll(cls, context)
 
-
 class SharedFoldersRemoveFolderOperator(bpy.types.Operator):
     bl_idname = "mixer.remove_shared_folder"
     bl_label = "Remove Shared Folder"
@@ -99,13 +96,11 @@ class SharedFoldersRemoveFolderOperator(bpy.types.Operator):
     def poll(cls, context):
         return generic_poll(cls, context)
 
-
 def generic_poll(cls, context):
     for func, _reason in cls.poll_functors(context):
         if not func():
             return False
     return True
-
 
 def generic_description(cls, context, properties):
     result = cls.__doc__
@@ -114,7 +109,6 @@ def generic_description(cls, context, properties):
             result += f" (Error: {reason})"
             break
     return result
-
 
 class CreateRoomOperator(bpy.types.Operator):
     """Create a new room on Mixer server with the specified name"""
@@ -152,16 +146,14 @@ class CreateRoomOperator(bpy.types.Operator):
         shared_folders = []
         for item in mixer_prefs.shared_folders:
             shared_folders.append(item.shared_folder)
-        create_room(room, mixer_prefs.vrtist_protocol, shared_folders, mixer_prefs.ignore_version_check)
+        create_room(room, shared_folders, mixer_prefs.ignore_version_check)
 
         return {"FINISHED"}
-
 
 def get_selected_room_dict():
     room_index = get_mixer_props().room_index
     assert room_index < len(get_mixer_props().rooms)
     return share_data.client.rooms_attributes[get_mixer_props().rooms[room_index].name]
-
 
 def clear_undo_history():
     # A horrible way to clear the undo stack since we can't do it normally in Blender :(
@@ -171,7 +163,6 @@ def clear_undo_history():
             bpy.ops.ed.undo_push(message="Mixer clear history")
     except RuntimeError:
         logging.error("Clear history failed")
-
 
 class JoinRoomOperator(bpy.types.Operator):
     """Join a room"""
@@ -230,13 +221,11 @@ class JoinRoomOperator(bpy.types.Operator):
             shared_folders.append(item.shared_folder)
         join_room(
             room,
-            not room_attributes.get(RoomAttributes.GENERIC_PROTOCOL, True),
             shared_folders,
             mixer_prefs.ignore_version_check,
         )
 
         return {"FINISHED"}
-
 
 class DeleteRoomOperator(bpy.types.Operator):
     """Delete an empty room"""
@@ -261,7 +250,6 @@ class DeleteRoomOperator(bpy.types.Operator):
         share_data.client.delete_room(room)
 
         return {"FINISHED"}
-
 
 class DownloadRoomOperator(bpy.types.Operator):
     """Download content of an empty room"""
@@ -300,7 +288,6 @@ class DownloadRoomOperator(bpy.types.Operator):
 
         return {"FINISHED"}
 
-
 class UploadRoomOperator(bpy.types.Operator):
     """Upload content of an empty room"""
 
@@ -328,7 +315,6 @@ class UploadRoomOperator(bpy.types.Operator):
 
         return {"FINISHED"}
 
-
 class LeaveRoomOperator(bpy.types.Operator):
     """Leave the current room"""
 
@@ -346,7 +332,6 @@ class LeaveRoomOperator(bpy.types.Operator):
         leave_current_room()
         update_ui_lists()
         return {"FINISHED"}
-
 
 class ConnectOperator(bpy.types.Operator):
     """Connect to the Mixer server"""
@@ -380,7 +365,6 @@ class ConnectOperator(bpy.types.Operator):
 
         return {"FINISHED"}
 
-
 class DisconnectOperator(bpy.types.Operator):
     """Disconnect from the Mixer server"""
 
@@ -397,137 +381,7 @@ class DisconnectOperator(bpy.types.Operator):
         self.report({"INFO"}, "Disconnected ...")
         return {"FINISHED"}
 
-
-class LaunchVRtistOperator(bpy.types.Operator):
-    """Launch a VRtist instance"""
-
-    bl_idname = "vrtist.launch"
-    bl_label = "Launch VRtist"
-    bl_options = {"REGISTER"}
-
-    vrtist_process = None
-
-    @classmethod
-    def poll(cls, context):
-        # Check VRtist process to auto disconnect
-        if cls.vrtist_process is not None and cls.vrtist_process.poll() is not None:
-            cls.vrtist_process = None
-            leave_current_room()
-            disconnect()
-
-        # Manage button state
-        return os.path.isfile(get_mixer_prefs().VRtist)
-
-    def execute(self, context):
-        bpy.data.window_managers["WinMan"].mixer.send_bake_meshes = True
-
-        mixer_prefs = get_mixer_prefs()
-        if not share_data.client or not share_data.client.current_room:
-            timeout = 10
-            try:
-                connect()
-            except Exception as e:
-                self.report({"ERROR"}, f"vrtist.launch connect error : {e!r}")
-                return {"CANCELLED"}
-
-            # Wait for local server creation
-            while timeout > 0 and not is_client_connected():
-                time.sleep(0.5)
-                timeout -= 0.5
-            if timeout <= 0:
-                self.report({"ERROR"}, "vrtist.launch connect error : unable to connect")
-                return {"CANCELLED"}
-
-            logger.warning("LaunchVRtistOperator.execute({mixer_prefs.room})")
-            shared_folders = []
-            for item in mixer_prefs.shared_folders:
-                shared_folders.append(item.shared_folder)
-            mixer_prefs.ignore_version_check = True
-            join_room(mixer_prefs.room, True, shared_folders, mixer_prefs.ignore_version_check)
-
-            # Wait for room creation/join
-            timeout = 10
-            while timeout > 0 and share_data.client.current_room is None:
-                time.sleep(0.5)
-                timeout -= 0.5
-            if timeout <= 0:
-                self.report({"ERROR"}, "vrtist.launch connect error : unable to join room")
-                return {"CANCELLED"}
-
-            # Wait for client id
-            timeout = 10
-            while timeout > 0 and share_data.client.client_id is None:
-                network_consumer_timer()
-                time.sleep(0.1)
-                timeout -= 0.1
-            if timeout <= 0:
-                self.report({"ERROR"}, "vrtist.launch connect error : unable to retrieve client id")
-                return {"CANCELLED"}
-
-        color = share_data.client.clients_attributes[share_data.client.client_id].get(
-            ClientAttributes.USERCOLOR, (0.0, 0.0, 0.0)
-        )
-        color = (int(c * 255) for c in color)
-        color = "#" + "".join(f"{c:02x}" for c in color)
-        name = "VR " + share_data.client.clients_attributes[share_data.client.client_id].get(
-            ClientAttributes.USERNAME, "client"
-        )
-
-        args = [
-            mixer_prefs.VRtist,
-            "--room",
-            share_data.client.current_room,
-            "--hostname",
-            mixer_prefs.host,
-            "--port",
-            str(mixer_prefs.port),
-            "--master",
-            str(share_data.client.client_id),
-            "--usercolor",
-            color,
-            "--username",
-            name,
-            "--startScene",
-            os.path.split(bpy.data.filepath)[1],
-        ]
-        LaunchVRtistOperator.vrtist_process = subprocess.Popen(
-            args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=False
-        )
-        return {"FINISHED"}
-
-
-class ToggleBetweenMixerAndVRtistPanels(bpy.types.Operator):
-    bl_idname = "mixervrtist.toggle"
-    bl_label = "Mixer / VRtist Panels"
-    bl_description = "Toggle Between Mixer and VRtist Panels"
-    bl_options = {"INTERNAL"}
-
-    mixer_desciption = """Toggle from VRtist to Mixer panel.
-Mixer offers a collaborative real-time environment for Blender users.
-\nSee the documentation for more information"""
-    vrtist_desciption = """Toggle from Mixer to VRtist panel.
-This panel will allow you to set up a live link between Blender and VRtist,
-a VR application developed by Ubisoft Animation Studio for immersive animation direction.
-\nSee the documentation for more information"""
-    panel_mode: bpy.props.StringProperty(default="MIXER")
-
-    @classmethod
-    def description(cls, context, properties):
-        descr = "Toggle between Mixer and VRtist panels.\n"
-        if "MIXER" == properties.panel_mode:
-            descr = cls.mixer_desciption
-        elif "VRTIST" == properties.panel_mode:
-            descr = cls.vrtist_desciption
-        return descr
-
-    def invoke(self, context, event):
-        mixer_prefs = get_mixer_prefs()
-        mixer_prefs.display_mixer_vrtist_panels = self.panel_mode
-        return {"FINISHED"}
-
-
 classes = (
-    LaunchVRtistOperator,
     CreateRoomOperator,
     ConnectOperator,
     DisconnectOperator,
@@ -538,15 +392,12 @@ classes = (
     UploadRoomOperator,
     SharedFoldersAddFolderOperator,
     SharedFoldersRemoveFolderOperator,
-    ToggleBetweenMixerAndVRtistPanels,
 )
 
 register_factory, unregister_factory = bpy.utils.register_classes_factory(classes)
 
-
 def register():
     register_factory()
-
 
 def unregister():
     disconnect()

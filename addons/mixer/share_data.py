@@ -421,22 +421,16 @@ class ShareData:
             x.name_full: x.parent.name_full if x.parent is not None else "" for x in self.blender_objects.values()
         }
 
-    def init_protocol(self, vrtist_protocol: bool, shared_folders: List):
-        if not vrtist_protocol:
-            logger.warning("Generic protocol sync is ON")
-            self.bpy_data_proxy = BpyDataProxy()
-            if shared_folders is not None:
-                logger.warning("Setting shared folders: " + str(shared_folders))
-            else:
-                logger.warning("No shared folder set")
-            self.bpy_data_proxy.set_shared_folders(shared_folders)
+    def init_protocol(self, shared_folders: List):
+        logger.warning("Generic protocol sync is ON")
+        self.bpy_data_proxy = BpyDataProxy()
+        if shared_folders is not None:
+            logger.warning("Setting shared folders: " + str(shared_folders))
         else:
-            logger.warning("VRtist protocol sync is ON")
-            if self.bpy_data_proxy:
-                self.bpy_data_proxy = None
+            logger.warning("No shared folder set")
+        self.bpy_data_proxy.set_shared_folders(shared_folders)
 
-    def use_vrtist_protocol(self):
-        return self.bpy_data_proxy is None
+
 
     def receive_sanity_check(self):
         if self.bpy_data_proxy:

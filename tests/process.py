@@ -276,7 +276,7 @@ class ServerProcess(PythonProcess):
 
     def __init__(self):
         super().__init__()
-        self.port: int = int(os.environ.get("VRTIST_PORT", DEFAULT_PORT))
+        self.port: int = int(os.environ.get("PORT", DEFAULT_PORT))
         self.host: str = "127.0.0.1"
 
     def start(self, server_args: Optional[List[str]] = None):

@@ -86,34 +86,27 @@ def build_collection_to_scene(data):
 
     # This message is not emitted by VRtist, only by Blender, so it is used only for Blender/Blender sync.
     # In generic mode, it conflicts with generic messages, so drop it
-    if not share_data.use_vrtist_protocol():
-        logger.warning("build_collection_to_scene %s <- %s", scene_name, collection_name)
-        return
+    return
 
     logger.info("build_collection_to_scene %s <- %s", scene_name, collection_name)
 
     try:
         scene = share_data.blender_scenes[scene_name]
     except KeyError:
-        if not share_data.use_vrtist_protocol():
-            # Removed by the Blender Protocol
-            logger.info(f"build_collection_to_scene(): scene not found {scene_name}. Safe in generic mode ...")
-            return
-        else:
-            raise
+        # Removed by the Blender Protocol
+        logger.info(f"build_collection_to_scene(): scene not found {scene_name}. Safe in generic mode ...")
+        return
 
     collection = share_data.blender_collections[collection_name]
     try:
         scene.collection.children.link(collection)
     except RuntimeError as e:
-        if not share_data.use_vrtist_protocol():
-            # Added by the Blender Protocol
-            logger.info(f"build_collection_to_scene(): scene {scene_name}, collection {collection_name}...")
-            logger.info("... Exception during scene.collection.children.link() ...")
-            logger.info("... Safe in generic mode ...")
-            logger.info(f"... {e!r}")
-        else:
-            raise
+        # Removed by the Blender Protocol
+        logger.info(f"build_remove_collection_from_scene(): scene {scene_name}, collection {collection_name}...")
+        logger.info("... Exception during scene.collection.children.unlink() ...")
+        logger.info("... Safe in generic mode ...")
+        logger.info(f"... {e!r}")
+        raise
     share_data.update_collection_temporary_visibility(collection_name)
 
 
@@ -130,9 +123,7 @@ def build_remove_collection_from_scene(data):
 
     # This message is not emitted by VRtist, only by Blender, so it is used only for Blender/Blender sync.
     # In generic mode, it conflicts with generic messages, so drop it
-    if not share_data.use_vrtist_protocol():
-        logger.warning("build_remove_collection_from_scene  %s <- %s", scene_name, collection_name)
-        return
+    logger.warning("build_remove_collection_from_scene  %s <- %s", scene_name, collection_name)
 
     logger.info("build_remove_collection_from_scene %s <- %s", scene_name, collection_name)
     scene = share_data.blender_scenes[scene_name]
@@ -146,10 +137,7 @@ def build_remove_collection_from_scene(data):
             logger.info(f"... {e!r} ")
 
 
-def send_add_object_to_vrtist(client: Client, scene_name: str, obj_name: str):
-    logger.debug("send_add_object_to_vrtist %s <- %s", scene_name, obj_name)
-    buffer = common.encode_string(scene_name) + common.encode_string(obj_name)
-    client.add_command(common.Command(common.MessageType.ADD_OBJECT_TO_VRTIST, buffer, 0))
+
 
 
 def send_add_object_to_scene(client: Client, scene_name: str, obj_name: str):
@@ -166,12 +154,9 @@ def build_add_object_to_scene(data):
     try:
         scene = share_data.blender_scenes[scene_name]
     except KeyError:
-        if not share_data.use_vrtist_protocol():
-            # Removed by the Blender Protocol
-            logger.info(f"build_collection_to_scene(): scene not found {scene_name}. Safe in generic mode ...")
-            return
-        else:
-            raise
+        # Removed by the Blender Protocol
+        logger.info(f"build_collection_to_scene(): scene not found {scene_name}. Safe in generic mode ...")
+        return
 
     # We may have received an object creation message before this collection link message
     # and object creation will have created and linked the collecetion if needed

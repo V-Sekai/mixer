@@ -44,7 +44,7 @@ class MessageType(IntEnum):
     """
     Each message has a integer code to identify it.
 
-    A known issue of this strategy is that it is difficult to sync the code of different kind of clients (blender, vrtist)
+    A known issue of this strategy is that it is difficult to sync the code of different kind of clients (blender clients)
     according to changes here. This will be adressed in the future by improving the protocol to include the notion
     of client types.
     

@@ -30,13 +30,6 @@ class ThrottledTestCase(BlenderTestCase):
             latency_ms = 1000 * self.latency
             server_args = ["--latency", str(latency_ms)]
             super().setUp(blenderdescs=blenderdescs, server_args=server_args)
-            if not self.vrtist_protocol:
-                self.ignored_messages |= {
-                    # TODO clarify this
-                    MessageType.ADD_OBJECT_TO_VRTIST,
-                    # set to the scene displayed, which is not important as VRtist supports one scene only
-                    MessageType.SET_SCENE,
-                }
 
         except Exception:
             self.shutdown()

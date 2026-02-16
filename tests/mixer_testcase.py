@@ -45,7 +45,6 @@ class MixerTestCase:
     def __init__(self):
         self.latency = 0
         self.expected_counts = {}
-        self.vrtist_protocol = False  # Default to False, can be overridden
         self._log_level = logging.WARNING
         self._server_process: ServerProcess = ServerProcess()
         self._blenders: List[BlenderApp] = []
@@ -67,12 +66,7 @@ class MixerTestCase:
         """
         Tweak test case name for parameterized (from parameterized doc)
         """
-        if params_dict["vrtist_protocol"]:
-            suffix = "_VRtist"
-        else:
-            suffix = "_Generic"
-
-        return test_class.__name__ + suffix
+        return test_class.__name__ + "_Generic"
 
     @property
     def _sender(self):
@@ -118,9 +112,9 @@ class MixerTestCase:
                 if join:
                     blender.connect_mixer()
                     if i == 0:
-                        blender.create_room(vrtist_protocol=self.vrtist_protocol, shared_folders=shared_folders)
+                        blender.create_room(shared_folders=shared_folders)
                     else:
-                        blender.join_room(vrtist_protocol=self.vrtist_protocol, shared_folders=shared_folders)
+                        blender.join_room(shared_folders=shared_folders)
 
                 self._blenders.append(blender)
 
@@ -190,7 +184,6 @@ class MixerTestCase:
                 blender.create_room(
                     f"mixer_grab_{i}",
                     keep_room_open=True,
-                    vrtist_protocol=self.vrtist_protocol,
                     shared_folders=shared_folders,
                 )
                 time.sleep(scene_upload_delay)
@@ -421,9 +414,9 @@ class MixerTestCase:
         for i, blender in enumerate(self._blenders):
             blender.connect_mixer()
             if i == 0:
-                blender.create_room(vrtist_protocol=self.vrtist_protocol)
+                blender.create_room()
             else:
-                blender.join_room(vrtist_protocol=self.vrtist_protocol)
+                blender.join_room()
 
     def disconnect(self):
         try:
