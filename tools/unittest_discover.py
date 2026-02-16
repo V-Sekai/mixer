@@ -14,8 +14,10 @@ try:
 except ImportError:
     bpy_available = False
 
-# Add the addons directory to the path so we can import mixer modules
-sys.path.insert(0, str(Path(__file__).parent.parent / "addons"))
+# Add the project root and addons directory to the path so we can import mixer modules and tests
+project_root = Path(__file__).parent.parent
+sys.path.insert(0, str(project_root))
+sys.path.insert(0, str(project_root / "addons"))
 
 def discover_and_run_test_suite(argv: list[str], stream: TextIO) -> int:
     # Check if we're running inside Blender

@@ -39,15 +39,9 @@ wheels = [
 ]
 
 [[package]]
-name = "blender"
-version = "1.4"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/b9/ac/31d3d2a51a4db8b0df7900978a50a88664054b3d9b07e8a909e282b150e6/blender-1.4.tar.gz", hash = "sha256:ddad81081e4e4d14e91cf49886028a96d620f0ebc514dc82f51774ec42117de9", size = 24680401, upload-time = "2019-08-08T17:45:52.004Z" }
-
-[[package]]
 name = "bpy"
 version = "4.5.2"
-source = { registry = "https://pypi.org/simple" }
+source = { registry = "https://download.blender.org/pypi/" }
 dependencies = [
     { name = "cython" },
     { name = "numpy" },
@@ -55,11 +49,11 @@ dependencies = [
     { name = "zstandard" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/88/4f/3bfcb8bf72754ca8d7f7c64e40429c2561a3e8fd24b41cdf49cc993f53b9/bpy-4.5.2-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:5bd8708d5d62a1cbde30ffc4395dde09febcf034a880cbb06f0ae1c95d99054c", size = 220890271, upload-time = "2025-08-22T09:28:59.233Z" },
-    { url = "https://files.pythonhosted.org/packages/6e/15/ff6aecb4dda90328aee3327e49bd2d57c9b1b3eb8ca9b86ca9a666b64146/bpy-4.5.2-cp311-cp311-macosx_11_0_x86_64.whl", hash = "sha256:56515bcfeedf0a0ec9813179ef11bc54701c7389108f9a0a077226b35de5482a", size = 235127666, upload-time = "2025-08-22T09:27:19.44Z" },
-    { url = "https://files.pythonhosted.org/packages/ee/f7/e34428697b79458c0a57c55e8c8f7e868bf922a8ad1de46be767a00ad69b/bpy-4.5.2-cp311-cp311-manylinux_2_28_x86_64.whl", hash = "sha256:536a722cbb4ae6db5770edf8e8a8ccaff2f09c2a7eaf52ecba730e523b6e6bd7", size = 373008129, upload-time = "2025-08-22T09:28:35.441Z" },
-    { url = "https://files.pythonhosted.org/packages/b6/bd/9d8528a1abb0a46baefe81eb3ab4ebb39aca3d5813acbb7c99d401d586c8/bpy-4.5.2-cp311-cp311-win_amd64.whl", hash = "sha256:e22275e42ddc227dd845406bd6605c29ab7ae18b266f068f9aa29e347e9f4671", size = 326586790, upload-time = "2025-08-22T09:27:51.214Z" },
-    { url = "https://files.pythonhosted.org/packages/9e/98/f81dbde272f5a105921feba505cb188ac51ed63bd440e51726b01d444b4f/bpy-4.5.2-cp311-cp311-win_arm64.whl", hash = "sha256:c4e90e1387f5fc2e9e470b2f90cc0f868c23c00cba1a063ac661c41d6a22083b", size = 194073807, upload-time = "2025-08-22T09:26:54.765Z" },
+    { url = "https://download.blender.org/pypi/bpy/bpy-4.5.2-cp311-cp311-macosx_11_0_arm64.whl" },
+    { url = "https://download.blender.org/pypi/bpy/bpy-4.5.2-cp311-cp311-macosx_11_0_x86_64.whl" },
+    { url = "https://download.blender.org/pypi/bpy/bpy-4.5.2-cp311-cp311-manylinux_2_28_x86_64.whl" },
+    { url = "https://download.blender.org/pypi/bpy/bpy-4.5.2-cp311-cp311-win_amd64.whl" },
+    { url = "https://download.blender.org/pypi/bpy/bpy-4.5.2-cp311-cp311-win_arm64.whl" },
 ]
 
 [[package]]
@@ -273,7 +267,6 @@ name = "mixer"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
-    { name = "blender" },
     { name = "bpy" },
     { name = "hypothesis" },
     { name = "pytest" },
@@ -315,8 +308,7 @@ requires-dist = [
     { name = "appdirs", marker = "extra == 'dev'", specifier = ">=1.4.0" },
     { name = "attrs", marker = "extra == 'dev'", specifier = "==19.3.0" },
     { name = "attrs", marker = "extra == 'dev'", specifier = ">=19.3.0,<25.0.0" },
-    { name = "blender", specifier = ">=1.4" },
-    { name = "bpy", specifier = "==4.5.2" },
+    { name = "bpy", specifier = "==4.5.2", index = "https://download.blender.org/pypi/" },
     { name = "certifi", marker = "extra == 'dev'", specifier = "==2020.6.20" },
     { name = "certifi", marker = "extra == 'dev'", specifier = ">=2020.6.0" },
     { name = "chardet", marker = "extra == 'dev'", specifier = "==3.0.4" },
