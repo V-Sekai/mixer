@@ -5,7 +5,7 @@ import logging
 import sys
 
 from tests import files_folder
-from tests.mixer_testcase import BlenderDesc, MixerTestCase
+from tests.test_helpers.mixer_testcase import BlenderDesc, MixerTestCase
 
 
 logging.basicConfig(stream=sys.stderr, level=logging.WARNING)

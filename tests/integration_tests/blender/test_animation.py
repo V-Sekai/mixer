@@ -1,35 +1,38 @@
 import pytest
-# Create a pytest-compatible wrapper for MixerTestCase using uv bpy
-from tests.mixer_testcase import MixerTestCase as BaseMixerTestCase
-from tests.mixer_testcase import BlenderDesc
+# Create a pytest-compatible wrapper for MixerTestCase
+from tests.test_helpers.mixer_testcase import MixerTestCase as BaseMixerTestCase
+from tests.test_helpers.mixer_testcase import BlenderDesc
 from tests import files_folder
 
-class MixerTestCaseUvBpy(BaseMixerTestCase):
+
+class MixerTestCaseWrapper(BaseMixerTestCase):
     """Pytest-compatible wrapper for MixerTestCase using uv bpy"""
 
-    def __init__(self):
+    def __init__(self, methodName='runTest'):
         # Initialize the base class directly
-        super().__init__()
+        super().__init__(methodName)
         # Add pytest-compatible assertion methods
         self.failureException = AssertionError
 
-    def setup_method(self):
-        # Call the base setup_method with Blender configurations using uv bpy
+    def setup_method(self, method):
+        # Call the base setup_method with Blender configurations
         sender_blendfile = files_folder() / "empty.blend"
         receiver_blendfile = files_folder() / "empty.blend"
         sender = BlenderDesc(load_file=sender_blendfile, wait_for_debugger=False)
         receiver = BlenderDesc(load_file=receiver_blendfile, wait_for_debugger=False)
         blenderdescs = [sender, receiver]
-        super().setup_method(blenderdescs=blenderdescs, join=True, use_uv_bpy=True)
+        super().setup_method(blenderdescs=blenderdescs, join=True)
 
-    def teardown_method(self):
+    def teardown_method(self, method):
         # Clean up blender instances
         super().teardown_method()
 
-class TestCaseUvBpy(MixerTestCaseUvBpy):
+
+class TestCase(MixerTestCaseWrapper):
     pass
 
-class TestAnimationDataUvBpy(TestCaseUvBpy):
+
+class TestAnimationData(TestCase):
     def test_animation_data_clear(self):
         action = """
 import bpy
@@ -55,7 +58,8 @@ obj.hide_viewport = False
 
         self.end_test()
 
-class TestKeyFrameUvBpy(TestCaseUvBpy):
+
+class TestKeyFrame(TestCase):
     def test_create_keyframe_datablock(self):
         action = """
 import bpy
@@ -106,7 +110,8 @@ obj.modifiers[0].keyframe_delete("count")
 """
         self.send_string(action)
 
-class TestDriverUvBpy(TestCaseUvBpy):
+
+class TestDriver(TestCase):
     def test_driver_add(self):
         action = """
 import bpy
@@ -180,6 +185,7 @@ bpy.context.view_layer.update()
         self.send_string(action)
 
         self.end_test()
+
 
 if __name__ == "__main__":
     pytest.main([__file__])

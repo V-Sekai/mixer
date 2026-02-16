@@ -1,8 +1,8 @@
 import unittest
 from hypothesis import given, strategies as st
 from tests import files_folder
-from tests.blender.blender_testcase import BlenderTestCase
-from tests.mixer_testcase import BlenderDesc
+from tests.integration_tests.blender.blender_testcase import BlenderTestCase
+from tests.test_helpers.mixer_testcase import BlenderDesc
 
 # Conditional bpy import for library context testing
 try:

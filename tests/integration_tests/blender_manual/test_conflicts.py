@@ -12,8 +12,8 @@ from pathlib import Path
 import unittest
 import time
 
-from tests.blender.blender_testcase import BlenderTestCase
-from tests.mixer_testcase import BlenderDesc
+from tests.integration_tests.blender.blender_testcase import BlenderTestCase
+from tests.test_helpers.mixer_testcase import BlenderDesc
 
 
 class ThrottledTestCase(BlenderTestCase):

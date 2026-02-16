@@ -5,7 +5,7 @@ import time
 from mixer.broadcaster.client import Client
 import mixer.broadcaster.common as common
 
-from tests.process import ServerProcess
+from tests.test_helpers.process import ServerProcess
 
 # Get logger for test functions
 logger = logging.getLogger(__name__)

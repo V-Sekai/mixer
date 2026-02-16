@@ -3,8 +3,8 @@ import time
 from typing import Iterable, List, Optional, Mapping
 import sys
 
-import tests.blender_lib as bl
-from tests.process import BlenderServer, UvBpyServer
+import tests.test_helpers.blender_lib as bl
+from tests.test_helpers.process import BlenderServer, UvBpyServer
 
 logging.basicConfig(stream=sys.stderr, level=logging.WARNING)
 logger = logging.getLogger(__name__)

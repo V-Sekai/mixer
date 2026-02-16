@@ -8,7 +8,13 @@ import sys
 import time
 from typing import Any, Callable, Iterable, List, Mapping, Optional
 
-import tests.blender_lib as blender_lib
+# Ensure mixer module is importable
+current_dir = Path(__file__).parent.parent.parent  # Go up to project root
+addons_dir = current_dir / "addons"
+if str(addons_dir) not in sys.path:
+    sys.path.insert(0, str(addons_dir))
+
+import tests.test_helpers.blender_lib as blender_lib
 
 from mixer.broadcaster.common import DEFAULT_PORT, encode_int
 

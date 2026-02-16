@@ -9,11 +9,12 @@ from pathlib import Path
 import pytest
 import sys
 import time
+import unittest
 from typing import Any, Iterable, List, Optional, Tuple
 
-from tests.blender_app import BlenderApp
-from tests.grabber import Grabber, CommandStream
-from tests.process import ServerProcess
+from tests.test_helpers.blender_app import BlenderApp
+from tests.test_helpers.grabber import Grabber, CommandStream
+from tests.test_helpers.process import ServerProcess
 
 import mixer.codec
 from mixer.broadcaster.common import Command, MessageType
@@ -22,14 +23,12 @@ from mixer.blender_data.types import Soa
 logging.basicConfig(stream=sys.stderr, level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
-
 @dataclass
 class BlenderDesc:
     load_file: Optional[str] = None
     wait_for_debugger: bool = False
 
-
-class MixerTestCase:
+class MixerTestCase(unittest.TestCase):
     """
     Base test case class for Mixer.
 
@@ -42,7 +41,8 @@ class MixerTestCase:
     - test success/failure
     """
 
-    def __init__(self):
+    def __init__(self, methodName='runTest'):
+        super().__init__(methodName)
         self.latency = 0
         self.expected_counts = {}
         self._log_level = logging.WARNING
@@ -85,7 +85,7 @@ class MixerTestCase:
     ):
         """
         if a blendfile if not specified, blender will start with its default file.
-        Not recommended) as it is machine dependent
+        Not recommended as it is machine dependent
         """
         try:
             python_port = 8081

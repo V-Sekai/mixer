@@ -3,8 +3,8 @@ import unittest
 from mixer.broadcaster.common import MessageType
 
 from tests import files_folder
-from tests.blender.blender_testcase import BlenderTestCase, TestGenericJoinBefore
-from tests.mixer_testcase import BlenderDesc
+from tests.integration_tests.blender.blender_testcase import BlenderTestCase, TestGenericJoinBefore
+from tests.test_helpers.mixer_testcase import BlenderDesc
 
 
 class TestCase(BlenderTestCase):

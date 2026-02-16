@@ -53,33 +53,53 @@ export UV_LINK_MODE=copy
 
 ## Running Tests
 
+### Test Types and Requirements
+
+Mixer supports multiple testing approaches with different requirements:
+
+#### Option 1: Full Blender Integration Tests
+For tests requiring a complete Blender installation:
+
+```bash
+export MIXER_BLENDER_EXE_PATH=/path/to/blender/executable
+uv run python -m pytest tests/integration_tests/blender/ -k "not test_mixer_uv_bpy"
+```
+
+#### Option 2: uv bpy Tests (Limited Compatibility)
+Tests using the PyPI `bpy` package - no Blender executable needed, but may have compatibility issues:
+
+```bash
+uv run python -m pytest tests/integration_tests/blender/test_mixer_uv_bpy.py -v
+```
+
+**Note:** uv bpy tests may fail due to API differences between PyPI bpy and full Blender bpy. Use full Blender integration tests for comprehensive testing.
+
+#### Option 3: Unit Tests
+No external dependencies required:
+
+```bash
+uv run python -m pytest tests/unit_tests/
+```
+
 ### All Tests
 
 ```bash
+# Run all tests (requires Blender executable for integration tests)
+export MIXER_BLENDER_EXE_PATH=/path/to/blender/executable
 uv run python -m pytest tests/
 ```
 
 ### Specific Test Categories
 
 ```bash
-# Blender integration tests
-uv run python -m pytest tests/blender/
+# Blender integration tests (requires Blender executable)
+uv run python -m pytest tests/integration_tests/blender/
 
-# Broadcaster tests
-uv run python -m pytest tests/broadcaster/
+# Broadcaster unit tests (no dependencies)
+uv run python -m pytest tests/unit_tests/broadcaster/
 
-# Functional tests
-uv run python -m pytest tests/blender/test_mixer_functional.py
-```
-
-### uv bpy Tests
-
-```bash
-# Test uv bpy subprocess communication
-uv run python -m pytest tests/blender/test_uv_bpy_integration.py -v
-
-# Test two Blender sync simulation
-uv run python -m pytest tests/blender/test_two_blender_sync.py -v
+# Functional tests (requires Blender executable)
+uv run python -m pytest tests/integration_tests/blender/test_mixer_functional.py
 ```
 
 ### Test Coverage
@@ -178,9 +198,11 @@ Update development setup instructions
 
 ### Test Organization
 
-- Unit tests in `tests/` directory
-- Blender integration tests in `tests/blender/`
-- Broadcaster tests in `tests/broadcaster/`
+- Unit tests in `tests/unit_tests/` directory
+- Integration tests in `tests/integration_tests/` directory
+- Test helpers in `tests/test_helpers/` directory
+- Blender integration tests in `tests/integration_tests/blender/`
+- Broadcaster unit tests in `tests/unit_tests/broadcaster/`
 - Functional tests for end-to-end scenarios
 
 ### uv bpy Testing
