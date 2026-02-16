@@ -37,16 +37,21 @@ jobs:
       - name: Build docs
         run: uv run sphinx-build -b html docs docs/_build/html
 
-      - name: Run tests
-        if: |
-          contains(github.ref, 'main') ||
-          contains(github.ref, 'develop') ||
-          github.event_name == 'pull_request'
+      - name: Run VRM-style library context tests (bpy only)
         env:
           PYTHONPATH: ${{ github.workspace }}:addons
         run: |
-          # Run basic pytest tests (without Blender integration)
-          uv run pytest tests/test_test.py tests/blender/test_proxy.py -v
+          # Run VRM-style library context tests using only bpy
+          # These tests will fail if bpy is not available, which is expected
+          uv run pytest tests/blender/test_bpy_library.py -v
+        continue-on-error: true
+
+      - name: Run basic proxy tests (no Blender required)
+        env:
+          PYTHONPATH: ${{ github.workspace }}:addons
+        run: |
+          # Run basic pytest tests that don't require Blender
+          uv run pytest tests/blender/test_proxy.py -v
         continue-on-error: true
 
       - name: Upload build artifacts

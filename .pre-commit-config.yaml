@@ -1,0 +1,37 @@
+default_language_version:
+  python: python3
+
+exclude: |
+  (?x)^(
+    .*thirdparty/.*|
+    .*-(dll|dylib|so)_wrap\.[ch]|
+    platform/android/java/editor/src/main/java/com/android/.*|
+    platform/android/java/lib/src/main/java/com/google/.*
+  )$
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-executables-have-shebangs
+      - id: check-shebang-scripts-are-executable
+        exclude: (SConstruct|SCsub)$ # SCons files use shebangs for syntax highlighting only.
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.0
+    hooks:
+      - id: ruff-check
+        args: [--color=always]
+        files: (\.py|SConstruct|SCsub)$
+        types_or: [text]
+      - id: ruff-format
+        args: [--color=always]
+        files: (\.py|SConstruct|SCsub)$
+        types_or: [text]
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.14.1 # Latest version that supports Python 3.8
+    hooks:
+      - id: mypy
+        files: \.py$
+        types_or: [text]

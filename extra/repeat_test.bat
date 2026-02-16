@@ -4,7 +4,7 @@
 setlocal enabledelayedexpansion
 
 @rem set PYTHONHASHSEED=1
-set TEST=tests.vrtist.test_conflicts.TestObjectRenameGeneric.test_update_object
+set TEST=tests.blender.test_animation.TestAnimationData.test_animation_data_clear
 set MIXER_BLENDER_EXE_PATH=c:\Blender-dev\blender-2.83.9-windows64\blender.exe
 
 set FAIL=0

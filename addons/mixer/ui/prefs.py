@@ -47,12 +47,7 @@ class MIXER_MT_prefs_main_menu(Menu):  # noqa 801
         row.operator("mixer.about", text="About...")
 
         layout.separator()
-        row = layout.row(align=True)
 
-        from mixer.vrtist import icons as vrtist_icons
-
-        icon = vrtist_icons.vrtist_icons_col["VRtist_32"]
-        row.operator("mixervrtist.toggle", text="Switch to VRtist Panel", icon_value=icon.icon_id).panel_mode = "VRTIST"
 
 
 _classes = (MIXER_MT_prefs_main_menu,)

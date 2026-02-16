@@ -480,26 +480,44 @@ def _(bpy_struct: T.Struct, properties: ItemsView) -> ItemsView:
     return _filter_properties(properties, filter_props)
 
 
-@conditional_properties.register(T.EffectSequence)  # type: ignore[no-redef]
-@conditional_properties.register(T.ImageSequence)
-@conditional_properties.register(T.MaskSequence)
-@conditional_properties.register(T.MetaSequence)
-@conditional_properties.register(T.MovieClipSequence)
-@conditional_properties.register(T.MovieSequence)
-@conditional_properties.register(T.SceneSequence)
-def _(bpy_struct: T.Struct, properties: ItemsView) -> ItemsView:
-    if bpy.app.version >= (2, 92, 0):
-        return properties
-    filter_props = []
-    if not bpy_struct.use_crop:
-        filter_props.append("crop")
-    if not bpy_struct.use_translation:
-        filter_props.append("transform")
+# EffectSequence was removed in Blender 5.0+, check if it exists before registering
+if hasattr(T, 'EffectSequence'):
+    @conditional_properties.register(T.EffectSequence)  # type: ignore[no-redef]
+    def _(bpy_struct: T.Struct, properties: ItemsView) -> ItemsView:
+        if bpy.app.version >= (2, 92, 0):
+            return properties
+        filter_props = []
+        if not bpy_struct.use_crop:
+            filter_props.append("crop")
+        if not bpy_struct.use_translation:
+            filter_props.append("transform")
 
-    if not filter_props:
-        return properties
+        if not filter_props:
+            return properties
 
-    return _filter_properties(properties, filter_props)
+        return _filter_properties(properties, filter_props)
+
+# Check if ImageSequence exists before registering (removed in newer Blender versions)
+if hasattr(T, 'ImageSequence'):
+    @conditional_properties.register(T.ImageSequence)
+    @conditional_properties.register(T.MaskSequence)
+    @conditional_properties.register(T.MetaSequence)
+    @conditional_properties.register(T.MovieClipSequence)
+    @conditional_properties.register(T.MovieSequence)
+    @conditional_properties.register(T.SceneSequence)
+    def _(bpy_struct: T.Struct, properties: ItemsView) -> ItemsView:
+        if bpy.app.version >= (2, 92, 0):
+            return properties
+        filter_props = []
+        if not bpy_struct.use_crop:
+            filter_props.append("crop")
+        if not bpy_struct.use_translation:
+            filter_props.append("transform")
+
+        if not filter_props:
+            return properties
+
+        return _filter_properties(properties, filter_props)
 
 
 _morphable_types = (T.Light, T.Texture)
@@ -626,22 +644,42 @@ def _(collection: T.bpy_prop_collection, proxy: Proxy, index: int, context: Cont
     return collection.new(socket_type, name)
 
 
-@add_element.register(T.NodeTreeInputs)  # type: ignore[no-redef]
-@add_element.register(T.NodeTreeOutputs)  # type: ignore[no-redef]
-def _(collection: T.bpy_prop_collection, proxy: Proxy, index: int, context: Context) -> T.bpy_struct:
-    socket_type = proxy.data("bl_socket_idname")
-    name = proxy.data("name")
-    return collection.new(socket_type, name)
+# Check if NodeTreeInputs/Outputs exist before registering (may not exist in PyPI bpy)
+if hasattr(T, 'NodeTreeInputs') and hasattr(T, 'NodeTreeOutputs'):
+    @add_element.register(T.NodeTreeInputs)  # type: ignore[no-redef]
+    @add_element.register(T.NodeTreeOutputs)  # type: ignore[no-redef]
+    def _(collection: T.bpy_prop_collection, proxy: Proxy, index: int, context: Context) -> T.bpy_struct:
+        socket_type = proxy.data("bl_socket_idname")
+        name = proxy.data("name")
+        return collection.new(socket_type, name)
 
 
-@add_element.register(T.ObjectGpencilModifiers)  # type: ignore[no-redef]
-@add_element.register(T.ObjectModifiers)
-@add_element.register(T.ObjectShaderFx)  # type: ignore[no-redef]
-@add_element.register(T.SequenceModifiers)  # type: ignore[no-redef]
-def _(collection: T.bpy_prop_collection, proxy: Proxy, index: int, context: Context) -> T.bpy_struct:
-    name = proxy.data("name")
-    type_ = proxy.data("type")
-    return collection.new(name, type_)
+# Check if ObjectGpencilModifiers exists before registering (may not exist in PyPI bpy)
+if hasattr(T, 'ObjectGpencilModifiers'):
+    @add_element.register(T.ObjectGpencilModifiers)  # type: ignore[no-redef]
+    @add_element.register(T.ObjectModifiers)
+    @add_element.register(T.ObjectShaderFx)  # type: ignore[no-redef]
+    @add_element.register(T.SequenceModifiers)  # type: ignore[no-redef]
+    def _(collection: T.bpy_prop_collection, proxy: Proxy, index: int, context: Context) -> T.bpy_struct:
+        name = proxy.data("name")
+        type_ = proxy.data("type")
+        return collection.new(name, type_)
+else:
+    # Fallback registration for ObjectModifiers without GpencilModifiers
+    @add_element.register(T.ObjectModifiers)
+    @add_element.register(T.ObjectShaderFx)  # type: ignore[no-redef]
+    def _(collection: T.bpy_prop_collection, proxy: Proxy, index: int, context: Context) -> T.bpy_struct:
+        name = proxy.data("name")
+        type_ = proxy.data("type")
+        return collection.new(name, type_)
+
+    # Check if SequenceModifiers exists before registering
+    if hasattr(T, 'SequenceModifiers'):
+        @add_element.register(T.SequenceModifiers)  # type: ignore[no-redef]
+        def _(collection: T.bpy_prop_collection, proxy: Proxy, index: int, context: Context) -> T.bpy_struct:
+            name = proxy.data("name")
+            type_ = proxy.data("type")
+            return collection.new(name, type_)
 
 
 @add_element.register(T.CurveSplines)  # type: ignore[no-redef]
@@ -683,15 +721,29 @@ def _(collection: T.bpy_prop_collection, proxy: Proxy, index: int, context: Cont
         raise AddElementFailed from None
 
 
-@add_element.register(T.ActionGroups)  # type: ignore[no-redef]
-@add_element.register(T.FaceMaps)
-@add_element.register(T.LoopColors)
-@add_element.register(T.TimelineMarkers)
-@add_element.register(T.UVLoopLayers)
-@add_element.register(T.VertexGroups)  # type: ignore[no-redef]
-def _(collection: T.bpy_prop_collection, proxy: Proxy, index: int, context: Context) -> T.bpy_struct:
-    name = proxy.data("name")
-    return collection.new(name=name)
+# Helper function to safely register add_element decorators only for types that exist
+def _safe_register_add_element(types_list, func):
+    """Register add_element decorator for types that exist in bpy.types"""
+    existing_types = [t for t in types_list if hasattr(T, t.split('.')[-1])]
+    if existing_types:
+        # Create a decorator that registers for all existing types
+        def decorator(f):
+            for type_name in existing_types:
+                type_attr = type_name.split('.')[-1]
+                add_element.register(getattr(T, type_attr))(f)
+            return f
+        return decorator(func)
+    return func
+
+# Register add_element for collection types that exist
+_safe_register_add_element([
+    'ActionGroups',
+    'FaceMaps',
+    'LoopColors',
+    'TimelineMarkers',
+    'UVLoopLayers',
+    'VertexGroups'
+], lambda collection, proxy, index, context: collection.new(name=proxy.data("name")))
 
 
 @add_element.register(T.ArmatureEditBones)  # type: ignore[no-redef]
@@ -764,6 +816,9 @@ _non_effect_sequences = {"IMAGE", "SOUND", "META", "SCENE", "MOVIE", "MOVIECLIP"
 
 @lru_cache(None)
 def _effect_sequences():
+    # EffectSequence was removed in Blender 5.0+, return empty set if it doesn't exist
+    if not hasattr(T, 'EffectSequence'):
+        return set()
     return set(T.EffectSequence.bl_rna.properties["type"].enum_items.keys()) - _non_effect_sequences
 
 

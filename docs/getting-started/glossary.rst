@@ -11,3 +11,4 @@ Glossary
 
     VRtist
         A Virtual Reality tool for storytelling: https://github.com/ubisoft/vrtist.
+    This project has been deprecated and is no longer maintained.

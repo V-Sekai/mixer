@@ -9,15 +9,24 @@ version = "0.1.0"
 requires-python = ">=3.11,<3.12"
 dependencies = [
     "pytest>=8.0.0",
-    "bpy==4.5.2",
+    "pytest-hypothesis>=0.19.0",
+    "hypothesis",
+    "bpy==5.0.1",
     "ruff>=0.4.10",
 ]
+
+[tool.uv.sources]
+bpy = { index = "download.blender.org" }
+
+[[tool.uv.index]]
+name = "download.blender.org"
+url = "https://download.blender.org/pypi/"
 
 [project.optional-dependencies]
 dev = [
     "ruff==0.4.10",
     "mypy==1.10.0",
-    "sphinx>=6.0.0,<8.0.0",
+    "sphinx>=6.0.0,<7.0.0",
     "sphinx-rtd-theme==0.5.1",
     "parameterized==0.7.4",
     "unittest-xml-reporting==3.0.2",
@@ -38,6 +47,17 @@ dev = [
     "entrypoints>=0.3",
     "pycodestyle>=2.6.0",
     "pep8-naming>=0.10.0",
+    "appdirs==1.4.3",
+    "attrs==19.3.0",
+    "certifi==2020.6.20",
+    "chardet==3.0.4",
+    "click==7.1.2",
+    "entrypoints==0.3",
+    "idna==2.10",
+    "importlib-metadata==1.7.0",
+    "typing==3.7.4.1",
+    "urllib3==1.25.9",
+    "zipp==3.1.0",
 ]
 
 [tool.pytest.ini_options]
@@ -48,6 +68,11 @@ python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
 pythonpath = [".", "addons"]
+
+[tool.hypothesis]
+max_examples = 10
+deadline = 1000
+suppress_health_check = ["too_slow"]
 
 [tool.black]
 line-length = 120
