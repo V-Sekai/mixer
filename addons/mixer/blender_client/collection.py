@@ -48,7 +48,7 @@ def build_collection(data):
     # This message is not emitted by VRtist, only by Blender, so it is used only for Blender/Blender sync.
     # In generic mode, it conflicts with generic messages, so drop it
     logger.warning("build_collection %s", name_full)
-        return
+    return
 
     # Blender/Blender in VRtist (non generic) mode
     visible, index = common.decode_bool(data, index)

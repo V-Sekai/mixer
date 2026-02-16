@@ -258,10 +258,11 @@ class PythonProcess(Process):
         # Pass PYTHONPATH to subprocess so it can import mixer modules
         env = os.environ.copy()
         current_pythonpath = env.get('PYTHONPATH', '')
+        # Add both current directory and addons directory to PYTHONPATH
+        pythonpath_entries = [os.getcwd(), os.path.join(os.getcwd(), 'addons')]
         if current_pythonpath:
-            env['PYTHONPATH'] = current_pythonpath + os.pathsep + os.getcwd()
-        else:
-            env['PYTHONPATH'] = os.getcwd()
+            pythonpath_entries.insert(0, current_pythonpath)
+        env['PYTHONPATH'] = os.pathsep.join(pythonpath_entries)
 
         popen_kwargs["env"] = env
 

@@ -40,7 +40,7 @@ wheels = [
 
 [[package]]
 name = "bpy"
-version = "4.5.2"
+version = "5.0.1"
 source = { registry = "https://download.blender.org/pypi/" }
 dependencies = [
     { name = "cython" },
@@ -49,11 +49,10 @@ dependencies = [
     { name = "zstandard" },
 ]
 wheels = [
-    { url = "https://download.blender.org/pypi/bpy/bpy-4.5.2-cp311-cp311-macosx_11_0_arm64.whl" },
-    { url = "https://download.blender.org/pypi/bpy/bpy-4.5.2-cp311-cp311-macosx_11_0_x86_64.whl" },
-    { url = "https://download.blender.org/pypi/bpy/bpy-4.5.2-cp311-cp311-manylinux_2_28_x86_64.whl" },
-    { url = "https://download.blender.org/pypi/bpy/bpy-4.5.2-cp311-cp311-win_amd64.whl" },
-    { url = "https://download.blender.org/pypi/bpy/bpy-4.5.2-cp311-cp311-win_arm64.whl" },
+    { url = "https://download.blender.org/pypi/bpy/bpy-5.0.1-cp311-cp311-macosx_11_0_arm64.whl" },
+    { url = "https://download.blender.org/pypi/bpy/bpy-5.0.1-cp311-cp311-manylinux_2_28_x86_64.whl" },
+    { url = "https://download.blender.org/pypi/bpy/bpy-5.0.1-cp311-cp311-win_amd64.whl" },
+    { url = "https://download.blender.org/pypi/bpy/bpy-5.0.1-cp311-cp311-win_arm64.whl" },
 ]
 
 [[package]]
@@ -308,7 +307,7 @@ requires-dist = [
     { name = "appdirs", marker = "extra == 'dev'", specifier = ">=1.4.0" },
     { name = "attrs", marker = "extra == 'dev'", specifier = "==19.3.0" },
     { name = "attrs", marker = "extra == 'dev'", specifier = ">=19.3.0,<25.0.0" },
-    { name = "bpy", specifier = "==4.5.2", index = "https://download.blender.org/pypi/" },
+    { name = "bpy", specifier = "==5.0.1", index = "https://download.blender.org/pypi/" },
     { name = "certifi", marker = "extra == 'dev'", specifier = "==2020.6.20" },
     { name = "certifi", marker = "extra == 'dev'", specifier = ">=2020.6.0" },
     { name = "chardet", marker = "extra == 'dev'", specifier = "==3.0.4" },
