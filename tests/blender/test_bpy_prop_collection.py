@@ -1,5 +1,5 @@
 import unittest
-
+from hypothesis import given, strategies as st
 from tests import files_folder
 from tests.blender.blender_testcase import BlenderTestCase
 from tests.mixer_testcase import BlenderDesc
@@ -26,36 +26,41 @@ class GreasePenciltestCase(TestCase):
 class TestMetaballElements(TestCase):
     """"""
 
-    def test_add(self):
-        create = """
+    @given(st.integers(), st.integers())
+    def test_add(self, x, y):
+        # Generate test data using Hypothesis
+        create = f"""
 import bpy
 bpy.ops.object.metaball_add(type='BALL')
-bpy.context.active_object.data.elements[0].co.x += 0
+bpy.context.active_object.data.elements[0].co.x += {x}
 bpy.ops.object.editmode_toggle()
 """
         self.send_string(create, to=0)
 
-        metaball_add = """
+        metaball_add = f"""
 import bpy
 # add in edit mode adds an element
 bpy.ops.object.metaball_add(type='PLANE')
-bpy.context.active_object.data.elements[1].co.x += 5
+bpy.context.active_object.data.elements[1].co.x += {y}
 bpy.ops.object.editmode_toggle()
 """
         self.send_string(metaball_add, to=0)
 
         self.assert_matches()
 
-    def test_remove(self):
-        create = """
+    @given(st.integers(), st.integers(), st.integers())
+    def test_remove(self, x, y, z):
+        # Generate test data using Hypothesis
+        create = f"""
 import bpy
 bpy.ops.object.metaball_add(type='BALL')
-bpy.context.active_object.data.elements[0].co.x += 0
+bpy.context.active_object.data.elements[0].co.x += {x}
 bpy.ops.object.editmode_toggle()
 bpy.ops.object.metaball_add(type='PLANE')
-bpy.context.active_object.data.elements[1].co.x += 5
+bpy.context.active_object.data.elements[1].co.x += {y}
+bpy.ops.object.editmode_toggle()
 bpy.ops.object.metaball_add(type='CAPSULE')
-bpy.context.active_object.data.elements[2].co.x += 10
+bpy.context.active_object.data.elements[2].co.x += {z}
 bpy.ops.object.editmode_toggle()
 """
         self.send_string(create, to=0)
@@ -73,14 +78,16 @@ bpy.ops.object.editmode_toggle()
 
 
 class TestGreasePencilModifier(GreasePenciltestCase):
-    def test_add(self):
-        create = """
+    @given(st.integers())
+    def test_add(self, n):
+        # Generate test data using Hypothesis
+        create = f"""
 import bpy
 bpy.ops.object.gpencil_add(type='MONKEY')
 """
         self.send_string(create, to=0)
 
-        layer_add = """
+        layer_add = f"""
 import bpy
 bpy.ops.object.gpencil_modifier_add(type='GP_ARRAY')
 bpy.ops.object.gpencil_modifier_add(type='GP_NOISE')
@@ -89,8 +96,10 @@ bpy.ops.object.gpencil_modifier_add(type='GP_NOISE')
 
         self.assert_matches()
 
-    def test_move_down(self):
-        create = """
+    @given(st.integers())
+    def test_move_down(self, n):
+        # Generate test data using Hypothesis
+        create = f"""
 import bpy
 bpy.ops.object.gpencil_add(type='MONKEY')
 bpy.ops.object.gpencil_modifier_add(type='GP_ARRAY')
@@ -98,7 +107,7 @@ bpy.ops.object.gpencil_modifier_add(type='GP_NOISE')
 """
         self.send_string(create, to=0)
 
-        layer_add = """
+        layer_add = f"""
 import bpy
 bpy.ops.object.gpencil_modifier_move_down(modifier='Array')
 """
@@ -108,14 +117,16 @@ bpy.ops.object.gpencil_modifier_move_down(modifier='Array')
 
 
 class TestGreasePencilLayer(GreasePenciltestCase):
-    def test_add(self):
-        create = """
+    @given(st.integers())
+    def test_add(self, n):
+        # Generate test data using Hypothesis
+        create = f"""
 import bpy
 bpy.ops.object.gpencil_add(type='MONKEY')
 """
         self.send_string(create, to=0)
 
-        layer_add = """
+        layer_add = f"""
 import bpy
 bpy.ops.gpencil.layer_add()
 """
@@ -123,8 +134,10 @@ bpy.ops.gpencil.layer_add()
 
         self.assert_matches()
 
-    def test_remove_first(self):
-        create = """
+    @given(st.integers())
+    def test_remove_first(self, n):
+        # Generate test data using Hypothesis
+        create = f"""
 import bpy
 bpy.ops.object.gpencil_add(type='MONKEY')
 """
@@ -135,12 +148,14 @@ import bpy
 bpy.ops.gpencil.layer_active(layer=1)
 bpy.ops.gpencil.layer_remove()
 """
-        self.send_string(layer_remove, to=0)
+        self.send_string(layer_remove, to=“0)
 
         self.assert_matches()
 
-    def test_remove_middle(self):
-        create = """
+    @given(st.integers())
+    def test_remove_middle(self, n):
+        # Generate test data using Hypothesis
+        create = f"""
 import bpy
 bpy.ops.object.gpencil_add(type='MONKEY')
 bpy.ops.gpencil.layer_add()
@@ -156,8 +171,10 @@ bpy.ops.gpencil.layer_remove()
 
         self.assert_matches()
 
-    def test_move(self):
-        create = """
+    @given(st.integers())
+    def test_move(self, n):
+        # Generate test data using Hypothesis
+        create = f"""
 import bpy
 bpy.ops.object.gpencil_add(type='MONKEY')
 """
@@ -174,8 +191,10 @@ bpy.ops.gpencil.layer_move(type='DOWN')
 
         self.assert_matches()
 
-    def test_merge(self):
-        create = """
+    @given(st.integers())
+    def test_merge(self, n):
+        # Generate test data using Hypothesis
+        create = f"""
 import bpy
 bpy.ops.object.gpencil_add(type='MONKEY')
 """
@@ -193,14 +212,16 @@ bpy.ops.gpencil.layer_merge()
 
 
 class TestObjectModifier(TestCase):
-    def test_add(self):
-        create = """
+    @given(st.integers(), st.integers())
+    def test_add(self, x, y):
+        # Generate test data using Hypothesis
+        create = f"""
 import bpy
 bpy.ops.mesh.primitive_cube_add()
 """
         self.send_string(create, to=0)
 
-        add_modifiers = """
+        add_modifiers = f"""
 import bpy
 bpy.ops.object.modifier_add(type='ARRAY')
 bpy.ops.object.modifier_add(type='SUBSURF')
@@ -209,8 +230,10 @@ bpy.ops.object.modifier_add(type='SUBSURF')
 
         self.assert_matches()
 
-    def test_move_down(self):
-        create = """
+    @given(st.integers(), st.integers())
+    def test_move_down(self, x, y):
+        # Generate test data using Hypothesis
+        create = f"""
 import bpy
 bpy.ops.mesh.primitive_cube_add()
 bpy.ops.object.modifier_add(type='ARRAY')
@@ -218,7 +241,7 @@ bpy.ops.object.modifier_add(type='SUBSURF')
 """
         self.send_string(create, to=0)
 
-        add_modifiers = """
+        add_modifiers = f"""
 import bpy
 bpy.ops.object.modifier_move_down(modifier='Array')
 """
@@ -229,14 +252,16 @@ bpy.ops.object.modifier_move_down(modifier='Array')
 
 class TestObjectVertexGroup(TestCase):
     # Test only Object.vertex_groups, without Mesh data
-    def test_add(self):
-        create = """
+    @given(st.integers())
+    def test_add(self, n):
+        # Generate test data using Hypothesis
+        create = f"""
 import bpy
 bpy.ops.mesh.primitive_cube_add()
 """
         self.send_string(create, to=0)
 
-        add_vertex_groups = """
+        add_vertex_groups = f"""
 import bpy
 bpy.ops.object.vertex_group_add()
 bpy.ops.object.vertex_group_add()
@@ -245,8 +270,10 @@ bpy.ops.object.vertex_group_add()
 
         self.assert_matches()
 
-    def test_move_last_up(self):
-        create = """
+    @given(st.integers(), st.integers())
+    def test_move_last_up(self, x, y):
+        # Generate test data using Hypothesis
+        create = f"""
 import bpy
 bpy.ops.mesh.primitive_cube_add()
 obj = bpy.context.active_object
@@ -268,8 +295,10 @@ bpy.ops.object.vertex_group_move(direction="UP")
 
 
 class TestCurveMapPoints(TestCase):
-    def test_light_falloff_curve_add_point(self):
-        action = """
+    @given(st.floats(), st.floats())
+    def test_light_falloff_curve_add_point(self, x, y):
+        # Generate test data using Hypothesis
+        action = f"""
 import bpy
 bpy.ops.object.light_add(type='POINT')
 """
@@ -278,10 +307,10 @@ bpy.ops.object.light_add(type='POINT')
         # HACK it seems that we do not receive the depsgraph update
         # for light.falloff_curve.curves[0].points so add a Light member update
 
-        action = """
+        action = f"""
 import bpy
 light = bpy.data.lights['Point']
-light.falloff_curve.curves[0].points.new(0.5, 0.5)
+light.falloff_curve.curves[0].points.new({x}, {y})
 light.distance = 20
 """
         self.send_string(action)
@@ -290,8 +319,10 @@ light.distance = 20
 
 
 class TestRenderViews(TestCase):
-    def test_scene_render_view_add_remove(self):
-        action = """
+    @given(st.integers())
+    def test_scene_render_view_add_remove(self, n):
+        # Generate test data using Hypothesis
+        action = f"""
 import bpy
 views = bpy.data.scenes[0].render.views
 bpy.ops.scene.render_view_add()
@@ -306,20 +337,21 @@ views.remove(views[0])
 
 class TestCurveMapping(TestCase):
     @unittest.skip("see internal issue #298")
-    def test_scene_color_management_curve(self):
-        action = """
+    @given(st.floats(), st.floats())
+    def test_scene_color_management_curve(self, x, y):
+        # Generate test data using Hypothesis
+        action = f"""
 import bpy
 settings = bpy.data.scenes[0].view_settings
 settings.use_curve_mapping = True
 rgb = settings.curve_mapping.curves[3]
 points = rgb.points
-points.new(0.2, 0.8)
-points.new(0.7, 0.3)
+points.new({x}, {y})
 """
         self.send_string(action)
 
         self.assert_matches()
 
 
-if __name__ == "main":
-    unittest.main()
+# Remove the unittest.main() call as it's not needed when using Hypothesis with pytest
+# The tests will be discovered and run by pytest automatically
