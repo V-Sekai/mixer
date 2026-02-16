@@ -81,6 +81,21 @@ No external dependencies required:
 uv run python -m pytest tests/unit_tests/
 ```
 
+#### Option 4: Fuzzing Tests (Hypothesis-based)
+Property-based testing with random input generation to find edge cases:
+
+```bash
+# Run fuzzing tests (requires Blender executable)
+export MIXER_BLENDER_EXE_PATH=/path/to/blender/executable
+./tools/test.sh --pattern="*fuzzing*" -v
+
+# Run with more examples for thorough testing (set hypothesis options via pytest)
+./tools/test.sh --pattern="*fuzzing*" --hypothesis-max-examples=100 -v
+
+# Run specific fuzzing test
+./tools/test.sh tests/unit_tests/fuzzing/test_proxy_fuzzing.py -v
+```
+
 ### All Tests
 
 ```bash
@@ -203,6 +218,7 @@ Update development setup instructions
 - Test helpers in `tests/test_helpers/` directory
 - Blender integration tests in `tests/integration_tests/blender/`
 - Broadcaster unit tests in `tests/unit_tests/broadcaster/`
+- Fuzzing tests in `tests/unit_tests/fuzzing/` directory
 - Functional tests for end-to-end scenarios
 
 ### uv bpy Testing
@@ -221,6 +237,26 @@ blender_app = BlenderApp(port, ptvsd_port, wait_for_debugger, use_uv_bpy=True)
 - Use appropriate assertions
 - Include docstrings explaining test purpose
 - Mock external dependencies when possible
+
+### Fuzzing Tests
+
+For APIs that handle complex data structures or user input, consider adding property-based fuzzing tests:
+
+- Use Hypothesis strategies to generate random valid/invalid inputs
+- Test edge cases that traditional unit tests might miss
+- Focus on save/load/apply/diff operations that transform data
+- Include cleanup to prevent test interference
+- Use `@settings(max_examples=N)` to control test thoroughness
+
+Example fuzzing test structure:
+
+```python
+@given(input_data=st.your_strategy())
+@settings(max_examples=50, deadline=2000)
+def test_api_fuzzing(input_data):
+    # Test API robustness with random inputs
+    pass
+```
 
 ### Integration Tests
 
