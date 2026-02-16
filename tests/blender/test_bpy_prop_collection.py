@@ -4,6 +4,13 @@ from tests import files_folder
 from tests.blender.blender_testcase import BlenderTestCase
 from tests.mixer_testcase import BlenderDesc
 
+# Conditional bpy import for library context testing
+try:
+    import bpy
+    bpy_available = True
+except ImportError:
+    bpy_available = False
+
 
 class TestCase(BlenderTestCase):
     def setUp(self):
@@ -352,6 +359,27 @@ points.new({x}, {y})
 
         self.assert_matches()
 
+
+@unittest.skipUnless(bpy_available, "bpy not available")
+class TestBpyLibraryContext(unittest.TestCase):
+    """Tests that can run directly with bpy in library context (inside Blender)"""
+
+    def test_bpy_version(self):
+        """Test that bpy is available and has expected version"""
+        self.assertTrue(hasattr(bpy, 'app'))
+        self.assertTrue(hasattr(bpy.app, 'version'))
+
+    def test_bpy_data_access(self):
+        """Test basic bpy.data access"""
+        # This should work when running inside Blender
+        scenes = bpy.data.scenes
+        self.assertIsInstance(scenes, bpy.types.bpy_prop_collection)
+
+    def test_bpy_context_access(self):
+        """Test basic bpy.context access"""
+        # This should work when running inside Blender
+        scene = bpy.context.scene
+        self.assertIsInstance(scene, bpy.types.Scene)
 
 # Remove the unittest.main() call as it's not needed when using Hypothesis with pytest
 # The tests will be discovered and run by pytest automatically

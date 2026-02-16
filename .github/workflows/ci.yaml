@@ -27,6 +27,14 @@ jobs:
       - name: Install dependencies
         run: uv sync --extra dev
 
+      - name: Install Blender
+        run: |
+          # Download and install Blender 4.5 (matching bpy==4.5.2)
+          wget -O blender.tar.xz https://download.blender.org/release/Blender4.5/blender-4.5.0-linux-x64.tar.xz
+          tar -xf blender.tar.xz
+          sudo mv blender-4.5.0-linux-x64 /opt/blender
+          echo "/opt/blender" >> $GITHUB_PATH
+
       - name: Run ruff
         run: uv run ruff check addons/mixer tests extra
 
@@ -37,15 +45,31 @@ jobs:
       - name: Build docs
         run: uv run sphinx-build -b html docs docs/_build/html
 
-      - name: Run tests
+      - name: Run basic tests (no Blender required)
+        env:
+          PYTHONPATH: ${{ github.workspace }}:addons
+        run: |
+          # Run basic pytest tests that don't require Blender
+          uv run pytest tests/test_test.py tests/blender/test_proxy.py -v
+        continue-on-error: true
+
+      - name: Run Blender integration tests
         if: |
           contains(github.ref, 'main') ||
           github.event_name == 'pull_request'
         env:
+          MIXER_BLENDER_EXE_PATH: /opt/blender/blender
           PYTHONPATH: ${{ github.workspace }}:addons
+          DISPLAY: :99
         run: |
-          # Run basic pytest tests (without Blender integration)
-          uv run pytest tests/test_test.py tests/blender/test_proxy.py -v
+          # Start virtual display for Blender
+          sudo apt-get update
+          sudo apt-get install -y xvfb
+          Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
+          sleep 3
+
+          # Run tests inside Blender using VRM-style approach
+          ./tools/test.sh -v
         continue-on-error: true
 
       - name: Upload build artifacts

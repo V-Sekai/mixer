@@ -9,10 +9,18 @@ version = "0.1.0"
 requires-python = ">=3.11,<3.12"
 dependencies = [
     "pytest>=8.0.0",
-    "hypothesis>=6.151.6",
+    "pytest-hypothesis>=0.19.0",
+    "hypothesis",
     "bpy==4.5.2",
     "ruff>=0.4.10",
 ]
+
+[tool.uv.sources]
+bpy = { index = "download.blender.org" }
+
+[[tool.uv.index]]
+name = "download.blender.org"
+url = "https://download.blender.org/pypi/"
 
 [project.optional-dependencies]
 dev = [
@@ -60,6 +68,11 @@ python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
 pythonpath = [".", "addons"]
+
+[tool.hypothesis]
+max_examples = 10
+deadline = 1000
+suppress_health_check = ["too_slow"]
 
 [tool.black]
 line-length = 120
