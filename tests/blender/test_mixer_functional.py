@@ -2,10 +2,8 @@
 Functional test for mixer synchronization
 """
 import unittest
-import time
-import subprocess
-import signal
 import os
+import subprocess
 from pathlib import Path
 
 class TestMixerFunctional(unittest.TestCase):

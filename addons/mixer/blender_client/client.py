@@ -1265,7 +1265,7 @@ def send_scene_content():
     Initial data send to fill a new room.
     """
 
-    from mixer.handlers import HandlerManager, send_scene_data_to_server
+    from mixer.handlers import HandlerManager
 
     if get_mixer_prefs().no_send_scene_content:
         return

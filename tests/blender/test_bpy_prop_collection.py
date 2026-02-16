@@ -88,13 +88,13 @@ class TestGreasePencilModifier(GreasePenciltestCase):
     @given(st.integers())
     def test_add(self, n):
         # Generate test data using Hypothesis
-        create = f"""
+        create = """
 import bpy
 bpy.ops.object.gpencil_add(type='MONKEY')
 """
         self.send_string(create, to=0)
 
-        layer_add = f"""
+        layer_add = """
 import bpy
 bpy.ops.object.gpencil_modifier_add(type='GP_ARRAY')
 bpy.ops.object.gpencil_modifier_add(type='GP_NOISE')
@@ -106,7 +106,7 @@ bpy.ops.object.gpencil_modifier_add(type='GP_NOISE')
     @given(st.integers())
     def test_move_down(self, n):
         # Generate test data using Hypothesis
-        create = f"""
+        create = """
 import bpy
 bpy.ops.object.gpencil_add(type='MONKEY')
 bpy.ops.object.gpencil_modifier_add(type='GP_ARRAY')
@@ -114,7 +114,7 @@ bpy.ops.object.gpencil_modifier_add(type='GP_NOISE')
 """
         self.send_string(create, to=0)
 
-        layer_add = f"""
+        layer_add = """
 import bpy
 bpy.ops.object.gpencil_modifier_move_down(modifier='Array')
 """
@@ -127,13 +127,13 @@ class TestGreasePencilLayer(GreasePenciltestCase):
     @given(st.integers())
     def test_add(self, n):
         # Generate test data using Hypothesis
-        create = f"""
+        create = """
 import bpy
 bpy.ops.object.gpencil_add(type='MONKEY')
 """
         self.send_string(create, to=0)
 
-        layer_add = f"""
+        layer_add = """
 import bpy
 bpy.ops.gpencil.layer_add()
 """
@@ -144,7 +144,7 @@ bpy.ops.gpencil.layer_add()
     @given(st.integers())
     def test_remove_first(self, n):
         # Generate test data using Hypothesis
-        create = f"""
+        create = """
 import bpy
 bpy.ops.object.gpencil_add(type='MONKEY')
 """
@@ -162,7 +162,7 @@ bpy.ops.gpencil.layer_remove()
     @given(st.integers())
     def test_remove_middle(self, n):
         # Generate test data using Hypothesis
-        create = f"""
+        create = """
 import bpy
 bpy.ops.object.gpencil_add(type='MONKEY')
 bpy.ops.gpencil.layer_add()
@@ -181,7 +181,7 @@ bpy.ops.gpencil.layer_remove()
     @given(st.integers())
     def test_move(self, n):
         # Generate test data using Hypothesis
-        create = f"""
+        create = """
 import bpy
 bpy.ops.object.gpencil_add(type='MONKEY')
 """
@@ -201,7 +201,7 @@ bpy.ops.gpencil.layer_move(type='DOWN')
     @given(st.integers())
     def test_merge(self, n):
         # Generate test data using Hypothesis
-        create = f"""
+        create = """
 import bpy
 bpy.ops.object.gpencil_add(type='MONKEY')
 """
@@ -222,13 +222,13 @@ class TestObjectModifier(TestCase):
     @given(st.integers(), st.integers())
     def test_add(self, x, y):
         # Generate test data using Hypothesis
-        create = f"""
+        create = """
 import bpy
 bpy.ops.mesh.primitive_cube_add()
 """
         self.send_string(create, to=0)
 
-        add_modifiers = f"""
+        add_modifiers = """
 import bpy
 bpy.ops.object.modifier_add(type='ARRAY')
 bpy.ops.object.modifier_add(type='SUBSURF')
@@ -240,7 +240,7 @@ bpy.ops.object.modifier_add(type='SUBSURF')
     @given(st.integers(), st.integers())
     def test_move_down(self, x, y):
         # Generate test data using Hypothesis
-        create = f"""
+        create = """
 import bpy
 bpy.ops.mesh.primitive_cube_add()
 bpy.ops.object.modifier_add(type='ARRAY')
@@ -248,7 +248,7 @@ bpy.ops.object.modifier_add(type='SUBSURF')
 """
         self.send_string(create, to=0)
 
-        add_modifiers = f"""
+        add_modifiers = """
 import bpy
 bpy.ops.object.modifier_move_down(modifier='Array')
 """
@@ -262,13 +262,13 @@ class TestObjectVertexGroup(TestCase):
     @given(st.integers())
     def test_add(self, n):
         # Generate test data using Hypothesis
-        create = f"""
+        create = """
 import bpy
 bpy.ops.mesh.primitive_cube_add()
 """
         self.send_string(create, to=0)
 
-        add_vertex_groups = f"""
+        add_vertex_groups = """
 import bpy
 bpy.ops.object.vertex_group_add()
 bpy.ops.object.vertex_group_add()
@@ -280,7 +280,7 @@ bpy.ops.object.vertex_group_add()
     @given(st.integers(), st.integers())
     def test_move_last_up(self, x, y):
         # Generate test data using Hypothesis
-        create = f"""
+        create = """
 import bpy
 bpy.ops.mesh.primitive_cube_add()
 obj = bpy.context.active_object
@@ -305,7 +305,7 @@ class TestCurveMapPoints(TestCase):
     @given(st.floats(), st.floats())
     def test_light_falloff_curve_add_point(self, x, y):
         # Generate test data using Hypothesis
-        action = f"""
+        action = """
 import bpy
 bpy.ops.object.light_add(type='POINT')
 """
@@ -329,7 +329,7 @@ class TestRenderViews(TestCase):
     @given(st.integers())
     def test_scene_render_view_add_remove(self, n):
         # Generate test data using Hypothesis
-        action = f"""
+        action = """
 import bpy
 views = bpy.data.scenes[0].render.views
 bpy.ops.scene.render_view_add()

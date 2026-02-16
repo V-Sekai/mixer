@@ -22,8 +22,6 @@ This module define Blender Operators types for the addon.
 import logging
 import os
 import socket
-import subprocess
-import time
 from pathlib import Path
 
 import bpy
@@ -32,7 +30,7 @@ from bpy_extras.io_utils import ImportHelper
 import mixer
 from mixer.share_data import share_data
 from mixer.bl_utils import get_mixer_props, get_mixer_prefs
-from mixer.broadcaster.common import RoomAttributes, ClientAttributes
+from mixer.broadcaster.common import RoomAttributes
 from mixer.connection import (
     is_client_connected,
     connect,
@@ -40,7 +38,6 @@ from mixer.connection import (
     join_room,
     leave_current_room,
     disconnect,
-    network_consumer_timer,
 )
 
 logger = logging.getLogger(__name__)

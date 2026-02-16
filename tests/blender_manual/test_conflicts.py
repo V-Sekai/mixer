@@ -12,8 +12,6 @@ from pathlib import Path
 import unittest
 import time
 
-from mixer.broadcaster.common import MessageType
-
 from tests.blender.blender_testcase import BlenderTestCase
 from tests.mixer_testcase import BlenderDesc
 
