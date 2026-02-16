@@ -29,10 +29,10 @@ jobs:
 
       - name: Install Blender
         run: |
-          # Download and install Blender 4.5.2 (matching bpy==4.5.2)
-          wget -O blender.tar.xz https://download.blender.org/release/Blender4.5/blender-4.5.2-linux-x64.tar.xz
+          # Download and install Blender 5.0.1 (matching bpy==5.0.1)
+          wget -O blender.tar.xz https://download.blender.org/release/Blender5.0/blender-5.0.1-linux-x64.tar.xz
           tar -xf blender.tar.xz
-          sudo mv blender-4.5.2-linux-x64 /opt/blender
+          sudo mv blender-5.0.1-linux-x64 /opt/blender
           echo "/opt/blender" >> $GITHUB_PATH
 
       - name: Run ruff
