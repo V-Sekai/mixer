@@ -53,7 +53,7 @@ jobs:
           uv run pytest tests/blender/test_proxy.py -v
         continue-on-error: true
 
-      - name: Run Blender integration tests
+      - name: Run VRM-style library context tests
         if: |
           contains(github.ref, 'main') ||
           github.event_name == 'pull_request'
@@ -68,8 +68,20 @@ jobs:
           Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
           sleep 3
 
-          # Run tests inside Blender using VRM-style approach
+          # Run VRM-style library context tests inside Blender
           ./tools/test.sh -v
+        continue-on-error: true
+
+      - name: Run traditional integration tests
+        if: |
+          contains(github.ref, 'main') ||
+          github.event_name == 'pull_request'
+        env:
+          PYTHONPATH: ${{ github.workspace }}:addons
+        run: |
+          # Run traditional integration tests with multiple Blender instances
+          # These test the actual mixer synchronization functionality
+          uv run pytest tests/blender/ -k "not TestBpyLibraryContext" --tb=short -x
         continue-on-error: true
 
       - name: Upload build artifacts
